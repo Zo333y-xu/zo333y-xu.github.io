@@ -80,7 +80,7 @@
     button.addEventListener("click", () => {
       const filter = button.dataset.projectFilter;
       cards.forEach((card) => {
-        card.hidden = card.dataset.type !== filter && card.dataset.media !== filter;
+        card.hidden = card.dataset.type !== filter && card.dataset.service !== filter;
       });
       setStatus(filter);
     });
