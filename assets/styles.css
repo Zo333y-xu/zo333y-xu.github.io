@@ -108,8 +108,15 @@ button { color: inherit; }
   font-size: 12px;
 }
 
-.primary-nav a { text-decoration: none; }
-.primary-nav a:hover, .primary-nav a:focus-visible, .primary-nav .is-current { font-weight: 700; }
+.primary-nav a,
+.language-button {
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.primary-nav a:hover,
+.primary-nav a:focus-visible,
+.primary-nav .is-current { color: var(--black); }
 
 .language-button {
   padding: 0;
@@ -152,11 +159,19 @@ button { color: inherit; }
   font-size: 14px;
 }
 
-.browse-nav strong { font-size: 14px; }
+.browse-nav > strong,
+.browse-tab {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  line-height: 30px;
+}
+
+.browse-nav > strong { font-size: 14px; }
 
 .browse-tab {
   position: relative;
-  padding: 4px 0 8px;
+  padding: 0;
   border: 0;
   color: var(--gray);
   background: transparent;
@@ -341,8 +356,8 @@ button { color: inherit; }
 
 .info-row {
   display: grid;
-  grid-template-columns: minmax(140px, 260px) minmax(0, 1fr);
-  gap: clamp(70px, 10vw, 220px);
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: clamp(64px, 7vw, 124px);
   align-items: start;
 }
 
@@ -365,8 +380,13 @@ button { color: inherit; }
   margin-left: clamp(220px, 22vw, 420px);
   align-items: start;
 }
-.about-detail > img { width: 100%; aspect-ratio: .74; object-fit: cover; }
-.about-detail__copy { max-width: 680px; font-size: 16px; line-height: 1.2; }
+.about-detail > img {
+  display: block;
+  width: 100%;
+  aspect-ratio: .74;
+  object-fit: cover;
+}
+.about-detail__copy { max-width: 620px; font-size: 16px; line-height: 1.2; }
 .about-detail__copy p { margin: 0 0 34px; }
 
 .clients {
@@ -486,7 +506,12 @@ button { color: inherit; }
   overflow: hidden;
 }
 
-.contact-map > img { width: 100%; height: 100%; object-fit: cover; }
+.contact-map > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
 .contact-map .contact-map-reference {
   position: absolute;
