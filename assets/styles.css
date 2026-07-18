@@ -334,8 +334,9 @@ button { color: inherit; }
 .about-copy {
   display: grid;
   gap: 58px;
-  width: min(1300px, 76%);
-  margin: 120px auto 100px;
+  width: min(980px, 58%);
+  margin: 120px 0 100px;
+  margin-left: clamp(220px, 22vw, 420px);
 }
 
 .info-row {
@@ -357,10 +358,11 @@ button { color: inherit; }
 .studio-image img { min-height: 480px; object-fit: cover; }
 .about-detail {
   display: grid;
-  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
-  gap: 28px;
-  width: min(1300px, 76%);
-  margin: 72px auto 82px;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 52px);
+  width: min(980px, 58%);
+  margin: 72px 0 82px;
+  margin-left: clamp(220px, 22vw, 420px);
   align-items: start;
 }
 .about-detail > img { width: 100%; aspect-ratio: .74; object-fit: cover; }
@@ -374,8 +376,9 @@ button { color: inherit; }
 }
 
 .clients h2 {
-  width: min(1300px, 76%);
-  margin: 0 auto 70px;
+  width: min(980px, 58%);
+  margin: 0 0 70px;
+  margin-left: clamp(220px, 22vw, 420px);
   font-size: clamp(15px, 1.08vw, 19px);
   font-weight: 400;
 }
@@ -585,7 +588,12 @@ button { color: inherit; }
   .browse-nav strong { font-size: 12px; }
   .browse-panel button { font-size: 12px; }
   .browse-panel--search input { font-size: 12px; }
-  .about-copy, .clients { width: 86%; }
+  .about-copy,
+  .about-detail,
+  .clients h2 {
+    width: min(980px, 72%);
+    margin-left: clamp(132px, 14vw, 220px);
+  }
   .info-row { gap: 50px; }
   .contact-details { grid-template-columns: 42% 58%; min-height: 560px; }
   .contact-row { grid-template-columns: 100px 1fr; }
