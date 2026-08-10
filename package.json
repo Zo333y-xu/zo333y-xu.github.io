@@ -1,0 +1,11 @@
+{
+  "name": "white-pix-site",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
