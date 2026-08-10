@@ -72,7 +72,7 @@ button { color: inherit; }
 }
 
 .site-header--over-image .brand,
-.site-header--over-image .primary-nav { color: var(--white); }
+.site-header--over-image .primary-nav { color: transparent; }
 
 .site-header--over-image .primary-nav {
   position: absolute;
@@ -139,7 +139,7 @@ button { color: inherit; }
 
 .site-header--over-image .primary-nav a:hover,
 .site-header--over-image .primary-nav a:focus-visible,
-.site-header--over-image .primary-nav .is-current { color: var(--white); }
+.site-header--over-image .primary-nav .is-current { color: transparent; }
 
 .language-button {
   padding: 0;

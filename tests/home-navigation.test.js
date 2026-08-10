@@ -16,8 +16,14 @@ for (const [label, href] of [
 
 assert.match(
   css,
-  /\.site-header--over-image \.brand,[\s\S]*?\.site-header--over-image \.primary-nav\s*\{\s*color:\s*var\(--white\);/,
-  "Home navigation and brand must remain visible over the hero image.",
+  /\.site-header--over-image \.brand,[\s\S]*?\.site-header--over-image \.primary-nav\s*\{\s*color:\s*transparent;/,
+  "Home navigation labels must remain transparent because the hero image already contains the visible labels.",
+);
+
+assert.match(
+  css,
+  /\.site-header--over-image \.primary-nav a:hover[\s\S]*?color:\s*transparent;/,
+  "Transparent navigation hit targets must not reveal a duplicate label on hover.",
 );
 
 assert.match(
