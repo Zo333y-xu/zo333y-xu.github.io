@@ -41,38 +41,6 @@
     });
   });
 
-  const homeVideoRoot = document.querySelector("[data-home-video]");
-  if (homeVideoRoot) {
-    const video = homeVideoRoot.querySelector("video[data-home-video-src]");
-    const play = homeVideoRoot.querySelector("[data-play-home-video]");
-    const error = homeVideoRoot.querySelector("[data-home-video-error]");
-
-    const activateVideo = async () => {
-      if (!video.querySelector("source")) {
-        const source = document.createElement("source");
-        source.src = video.dataset.homeVideoSrc;
-        source.type = "video/mp4";
-        video.append(source);
-        video.load();
-      }
-
-      error.hidden = true;
-      homeVideoRoot.classList.add("is-active");
-      try {
-        await video.play();
-      } catch {
-        video.controls = true;
-      }
-    };
-
-    play.addEventListener("click", activateVideo);
-    video.addEventListener("playing", () => { play.hidden = true; });
-    video.addEventListener("error", () => {
-      error.hidden = false;
-      homeVideoRoot.classList.remove("is-active");
-    });
-  }
-
   const tabs = [...document.querySelectorAll("[data-browse-tab]")];
   if (!tabs.length) return;
 

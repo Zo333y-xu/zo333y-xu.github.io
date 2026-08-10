@@ -765,18 +765,3 @@ button { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .project-play-button, .browse-more-card img { transition: none; }
 }
-
-.home-video-panel video { width: 100%; height: 100%; object-fit: cover; }
-.home-video-play { position: absolute; top: 50%; left: 50%; display: grid; width: clamp(64px, 9vw, 132px); aspect-ratio: 1; place-items: center; border: 0; border-radius: 50%; color: var(--white); background: rgb(255 255 255 / .6); cursor: pointer; transform: translate(-50%, -50%); transition: transform 180ms ease, background 180ms ease; }
-.home-video-play span { width: 0; height: 0; margin-left: 8%; border-top: 18px solid transparent; border-bottom: 18px solid transparent; border-left: 26px solid currentColor; }
-.home-video-play:hover, .home-video-play:focus-visible { background: rgb(255 255 255 / .85); transform: translate(-50%, -50%) scale(1.06); }
-.home-video-panel.is-active .home-video-play { opacity: 0; pointer-events: none; }
-.home-video-error { position: absolute; right: 16px; bottom: 16px; left: 16px; margin: 0; padding: 12px 16px; color: var(--white); background: rgb(8 8 8 / .82); font-size: 14px; }
-
-@media (max-width: 760px) {
-  .home-video-play span { border-top-width: 12px; border-bottom-width: 12px; border-left-width: 18px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-video-play { transition: none; }
-}
