@@ -16,8 +16,8 @@ for (const [label, href] of [
 
 assert.match(
   css,
-  /\.site-header--over-image \.primary-nav a:hover[\s\S]*?color:\s*transparent;/,
-  "Home navigation must stay transparent on hover because its labels are baked into the hero image.",
+  /\.site-header--over-image \.brand,[\s\S]*?\.site-header--over-image \.primary-nav\s*\{\s*color:\s*var\(--white\);/,
+  "Home navigation and brand must remain visible over the hero image.",
 );
 
 assert.match(
@@ -25,6 +25,11 @@ assert.match(
   /\.site-header--over-image \.primary-nav\s*{[\s\S]*?position:\s*absolute;[\s\S]*?grid-template-columns:\s*4\.2vw 3\.4vw 4\.25vw 2\.15vw;[\s\S]*?right:\s*\.4vw;/,
   "Home navigation hit targets must align with the labels baked into the hero image.",
 );
+
+assert.match(home, /class="home-project-title"/);
+assert.match(home, /Space Travel/);
+assert.match(home, /BY BAO/);
+assert.match(css, /\.home-project-title/);
 
 assert.doesNotMatch(home, /data-home-video/);
 assert.doesNotMatch(home, /home-hero-poster\.jpg/);
