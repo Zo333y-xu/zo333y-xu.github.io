@@ -26,10 +26,8 @@ assert.match(
   "Home navigation hit targets must align with the labels baked into the hero image.",
 );
 
-assert.match(home, /class="home-project-title"/);
-assert.match(home, /Space Travel/);
-assert.match(home, /BY BAO/);
-assert.match(css, /\.home-project-title/);
+assert.doesNotMatch(home, /class="home-project-title"/);
+assert.doesNotMatch(css, /\.home-project-title/);
 
 assert.doesNotMatch(home, /data-home-video/);
 assert.doesNotMatch(home, /home-hero-poster\.jpg/);

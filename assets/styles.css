@@ -169,30 +169,6 @@ button { color: inherit; }
 .work-panel:hover img,
 .work-panel:focus-visible img { transform: scale(1.025); filter: brightness(.94); }
 
-.home-project-title {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  display: flex;
-  align-items: center;
-  gap: .22em;
-  color: var(--white);
-  font-size: clamp(38px, 4.5vw, 82px);
-  font-weight: 300;
-  letter-spacing: -.055em;
-  line-height: 1;
-  white-space: nowrap;
-  transform: translate(-50%, -50%);
-}
-
-.home-project-title em {
-  font-family: "Segoe Print", "Bradley Hand", cursive;
-  font-size: .72em;
-  font-style: normal;
-  font-weight: 800;
-  letter-spacing: -.08em;
-}
-
 .projects-header {
   justify-content: space-between;
   height: 76px;
@@ -681,7 +657,6 @@ button { color: inherit; }
   .primary-nav a[href="#contact"], .language-button { display: none; }
   .work-panel { height: 74vw; min-height: 300px; }
   .work-panel img { object-position: center; }
-  .home-project-title { font-size: clamp(30px, 8vw, 52px); }
 
   .projects-header { align-items: flex-start; height: 108px; padding-top: 16px; }
   .projects-header .brand { top: 24px; left: 50%; transform: translate(-50%, -50%) rotate(-4deg); }
