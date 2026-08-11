@@ -117,7 +117,8 @@ test("detail-page stylesheet includes responsive player and recommendation rules
 test("AUDI project is updated to MICHELIN with automotive recommendations", () => {
   const project = projects.find((item) => item.slug === "audi");
   assert.equal(project.title, "MICHELIN");
-  assert.equal(project.video, "assets/videos/michelin.mp4");
+  assert.equal(project.poster, "assets/images/michelin-cover.png");
+  assert.equal(project.video, "assets/videos/michelin-4k.mp4");
   assert.equal(project.type, "Automotive");
   assert.equal(project.recommendedProjects[0], "space-travel");
   assert.match(project.background, /Summer road trips face slippery rainy roads/);
