@@ -28,7 +28,7 @@ module.exports = [
     title: "Space Homestead",
     background: "This is Space Home, our first sci-fi brand film created for Sunseeker Robotics—produced entirely with AI. It’s not about displaying products; it’s about presenting a future, a vision of human-robot coexistence. From residential lawns to commercial landscapes, from daily living to tomorrow's spaces, this marks the official launch of Sunseeker Robotics' outdoor robotics ecosystem. This isn't a future we wait for. It’s the future we build with our own hands.",
     poster: "assets/images/space-homestead-cover.jpg",
-    video: "assets/videos/space-homestead.mp4",
+    video: "assets/videos/space-homestead-1080p.mp4",
     imageAlt: "Space Homestead orbital structure above Earth",
     type: "3C & Tech",
     service: "AI-Generated",
