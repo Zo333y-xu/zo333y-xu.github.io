@@ -133,3 +133,13 @@ test("Golden Hour project is updated to SANRIO with Beauty & Fashion recommendat
   assert.equal(project.recommendedProjects[0], "urban-silence");
   assert.match(project.background, /Escape city hustle after work/);
 });
+
+test("Urban Silence project is updated to Space Homestead with 3C recommendations", () => {
+  const project = projects.find((item) => item.slug === "urban-silence");
+  assert.equal(project.title, "Space Homestead");
+  assert.equal(project.poster, "assets/images/space-homestead-cover.jpg");
+  assert.equal(project.video, "assets/videos/space-homestead.mp4");
+  assert.equal(project.type, "3C & Tech");
+  assert.equal(project.recommendedProjects[0], "elf");
+  assert.match(project.background, /our first sci-fi brand film created for Sunseeker Robotics/);
+});
