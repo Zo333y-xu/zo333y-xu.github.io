@@ -123,3 +123,13 @@ test("AUDI project is updated to MICHELIN with automotive recommendations", () =
   assert.equal(project.recommendedProjects[0], "space-travel");
   assert.match(project.background, /Summer road trips face slippery rainy roads/);
 });
+
+test("Golden Hour project is updated to SANRIO with Beauty & Fashion recommendations", () => {
+  const project = projects.find((item) => item.slug === "golden-hour");
+  assert.equal(project.title, "SANRIO");
+  assert.equal(project.poster, "assets/images/sanrio-cover.png");
+  assert.equal(project.video, "assets/videos/sanrio.mp4");
+  assert.equal(project.type, "Beauty & Fashion");
+  assert.equal(project.recommendedProjects[0], "urban-silence");
+  assert.match(project.background, /Escape city hustle after work/);
+});
