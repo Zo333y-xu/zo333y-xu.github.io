@@ -9,6 +9,7 @@ const {
   renderProjectCard,
   renderProjectDetail,
 } = require("../scripts/project-build.cjs");
+const projects = require("../data/projects.cjs");
 
 const validProject = {
   slug: "the-dawn",
@@ -111,4 +112,13 @@ test("detail-page stylesheet includes responsive player and recommendation rules
   assert.match(css, /\.project-player/);
   assert.match(css, /\.browse-more-grid/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.browse-more-grid/);
+});
+
+test("AUDI project is updated to MICHELIN with automotive recommendations", () => {
+  const project = projects.find((item) => item.slug === "audi");
+  assert.equal(project.title, "MICHELIN");
+  assert.equal(project.video, "assets/videos/michelin.mp4");
+  assert.equal(project.type, "Automotive");
+  assert.equal(project.recommendedProjects[0], "space-travel");
+  assert.match(project.background, /Summer road trips face slippery rainy roads/);
 });
