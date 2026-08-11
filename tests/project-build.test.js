@@ -117,7 +117,7 @@ test("detail-page stylesheet includes responsive player and recommendation rules
 test("AUDI project is updated to MICHELIN with automotive recommendations", () => {
   const project = projects.find((item) => item.slug === "audi");
   assert.equal(project.title, "MICHELIN");
-  assert.equal(project.poster, "assets/images/michelin-cover.png");
+  assert.equal(project.poster, "assets/images/michelin-cover.jpg");
   assert.equal(project.video, "assets/videos/michelin-4k.mp4");
   assert.equal(project.type, "Automotive");
   assert.equal(project.recommendedProjects[0], "space-travel");
@@ -127,7 +127,7 @@ test("AUDI project is updated to MICHELIN with automotive recommendations", () =
 test("Golden Hour project is updated to SANRIO with Beauty & Fashion recommendations", () => {
   const project = projects.find((item) => item.slug === "golden-hour");
   assert.equal(project.title, "SANRIO");
-  assert.equal(project.poster, "assets/images/sanrio-cover.png");
+  assert.equal(project.poster, "assets/images/sanrio-cover.jpg");
   assert.equal(project.video, "assets/videos/sanrio.mp4");
   assert.equal(project.type, "Beauty & Fashion");
   assert.equal(project.recommendedProjects[0], "urban-silence");
