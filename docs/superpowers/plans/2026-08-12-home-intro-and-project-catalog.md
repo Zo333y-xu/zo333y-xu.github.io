@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- The catalog must contain exactly 23 projects (Excel rows 2–24; row 1 is the separate intro) and exactly 10 unique `featuredOrder` values covering integers 1 through 10.
+- The catalog must contain exactly 23 projects and exactly 10 unique `featuredOrder` values covering integers 1 through 10.
 - The intro source is `D:/xwechat_files/wxid_mo3c9nf8jys422_6f51/msg/video/2026-08/b891f7949b42d0d7c7d76e621006ce1c.mp4` and the published destination is `assets/videos/site-intro.mp4`.
 - Service labels are exactly `AIGC`, `CG & VFX`, `2D Animation`, and `Online`, in that display order.
 - Type labels are exactly `3C & Tech`, `Automotive`, `FMCG`, `Beauty & Fashion`, and `Short Film`.
