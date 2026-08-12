@@ -122,6 +122,23 @@ test("video loading error enters home", () => {
   assert.equal(fixture.root.removed, true);
 });
 
+test("natural video end marks the session and unlocks home", () => {
+  const markerWrites = [];
+  const fixture = createFixture({
+    storage: {
+      getItem() { return null; },
+      setItem(key, value) { markerWrites.push([key, value]); },
+    },
+  });
+
+  starts(fixture);
+  fixture.video.dispatch("ended");
+
+  assert.equal(fixture.root.classList.has("is-finished"), true);
+  assert.equal(fixture.body.classList.has("intro-scroll-lock"), false);
+  assert.deepEqual(markerWrites, [["white-pix-intro-seen", "true"]]);
+});
+
 test("rejected autoplay promise enters home", async () => {
   const fixture = createFixture({ play: () => Promise.reject(new Error("blocked")) });
 
@@ -184,6 +201,32 @@ test("premature transitionend cannot remove an active intro", () => {
   fixture.root.dispatch("transitionend");
 
   assert.equal(fixture.root.removed, false);
+});
+
+test("transitionend removes the root after finish", () => {
+  const fixture = createFixture();
+  const gate = createIntroGate(fixture);
+
+  gate.start();
+  gate.finish();
+  fixture.root.dispatch("transitionend");
+
+  assert.equal(fixture.root.removed, true);
+});
+
+test("a throwing pause cannot interrupt finish", () => {
+  const fixture = createFixture({
+    pause() { throw new Error("media failure"); },
+  });
+  const gate = createIntroGate(fixture);
+
+  gate.start();
+  assert.doesNotThrow(() => gate.finish());
+  finishExit(fixture);
+
+  assert.equal(fixture.root.classList.has("is-finished"), true);
+  assert.equal(fixture.body.classList.has("intro-scroll-lock"), false);
+  assert.equal(fixture.root.removed, true);
 });
 
 test("storage exceptions cannot block entering home", () => {
