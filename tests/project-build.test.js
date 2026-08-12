@@ -31,8 +31,17 @@ const validProject = {
   recommendedProjects: ["space-travel"],
 };
 
-test("validateProjects accepts a complete unique record", () => {
-  assert.doesNotThrow(() => validateProjects([validProject]));
+function completeCatalog(overrides = {}) {
+  return Array.from({ length: 10 }, (_, index) => ({
+    ...validProject,
+    slug: `project-${index + 1}`,
+    featuredOrder: index + 1,
+    ...overrides,
+  }));
+}
+
+test("validateProjects accepts a complete featured catalog", () => {
+  assert.doesNotThrow(() => validateProjects(completeCatalog()));
 });
 
 test("validateProjects rejects duplicate slugs", () => {
@@ -65,6 +74,20 @@ test("validateProjects rejects noncanonical or duplicate featured metadata", () 
     () => validateProjects([{ ...validProject, featuredOrder: 11 }]),
     /the-dawn: invalid featuredOrder/,
   );
+  assert.throws(
+    () => validateProjects([{ ...validProject, featuredOrder: 1 }]),
+    /featuredOrder values must cover 1 through 10/,
+  );
+});
+
+test("validateProjects only accepts null or non-empty media source strings", () => {
+  for (const [field, value] of [["video", ""], ["video", 1], ["sourceUrl", ""], ["sourceUrl", {}]]) {
+    assert.throws(
+      () => validateProjects([{ ...validProject, [field]: value }]),
+      new RegExp(`the-dawn: invalid ${field}`),
+    );
+  }
+  assert.doesNotThrow(() => validateProjects(completeCatalog({ video: null, sourceUrl: null })));
 });
 
 test("catalog contains 23 valid projects and ten ordered features", () => {

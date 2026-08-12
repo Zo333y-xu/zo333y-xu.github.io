@@ -33,8 +33,12 @@ function validateProjects(projects) {
 
     if (typeof project.client !== "string") throw new Error(`${project.slug}: invalid client`);
     if (!Number.isInteger(project.year)) throw new Error(`${project.slug}: invalid year`);
-    if (project.video !== null && typeof project.video !== "string") throw new Error(`${project.slug}: invalid video`);
-    if (project.sourceUrl !== null && typeof project.sourceUrl !== "string") throw new Error(`${project.slug}: invalid sourceUrl`);
+    if (project.video !== null && (typeof project.video !== "string" || project.video.trim() === "")) {
+      throw new Error(`${project.slug}: invalid video`);
+    }
+    if (project.sourceUrl !== null && (typeof project.sourceUrl !== "string" || project.sourceUrl.trim() === "")) {
+      throw new Error(`${project.slug}: invalid sourceUrl`);
+    }
     if (!TYPE_VALUES.includes(project.type)) throw new Error(`${project.slug}: invalid type`);
     if (!Array.isArray(project.services) || project.services.length < 1 || project.services.length > 3) {
       throw new Error(`${project.slug}: invalid services`);
@@ -51,6 +55,9 @@ function validateProjects(projects) {
   }
   if (new Set(featuredOrders).size !== featuredOrders.length) {
     throw new Error("duplicate featuredOrder");
+  }
+  if (featuredOrders.length !== 10) {
+    throw new Error("featuredOrder values must cover 1 through 10");
   }
 }
 
