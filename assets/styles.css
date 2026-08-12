@@ -71,26 +71,20 @@ button { color: inherit; }
   background: transparent;
 }
 
-.site-header--over-image .brand,
-.site-header--over-image .primary-nav { color: transparent; }
-
-.site-header--over-image .primary-nav {
-  position: absolute;
-  top: .65vw;
-  display: grid;
-  grid-template-columns: 4.2vw 3.4vw 4.25vw 2.15vw;
-  gap: 0;
-  right: .4vw;
-  height: 2.1vw;
-  min-height: 28px;
+.site-header--over-image .brand {
+  top: 50%;
+  left: 50%;
+  width: clamp(160px, 13vw, 240px);
+  aspect-ratio: 893 / 240;
+  overflow: hidden;
+  color: transparent;
+  background: url("images/white-pix-logo-white.png") center / contain no-repeat;
+  transform: translate(-50%, -50%);
 }
 
-.site-header--over-image .primary-nav > * {
+.site-header--over-image .primary-nav {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
+  color: var(--white);
 }
 
 .site-header--over-image a:focus-visible,
@@ -139,7 +133,7 @@ button { color: inherit; }
 
 .site-header--over-image .primary-nav a:hover,
 .site-header--over-image .primary-nav a:focus-visible,
-.site-header--over-image .primary-nav .is-current { color: transparent; }
+.site-header--over-image .primary-nav .is-current { color: var(--white); }
 
 .language-button {
   padding: 0;

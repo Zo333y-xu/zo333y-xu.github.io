@@ -16,21 +16,23 @@ for (const [label, href] of [
 
 assert.match(
   css,
-  /\.site-header--over-image \.brand,[\s\S]*?\.site-header--over-image \.primary-nav\s*\{\s*color:\s*transparent;/,
-  "Home navigation labels must remain transparent because the hero image already contains the visible labels.",
+  /\.site-header--over-image \.brand\s*\{[\s\S]*?top:\s*50%;[\s\S]*?left:\s*50%;[\s\S]*?background:\s*url\("images\/white-pix-logo-white\.png"\)/,
+  "The standalone home logo must be centered in the header.",
 );
 
-assert.match(
+assert.doesNotMatch(
   css,
   /\.site-header--over-image \.primary-nav a:hover[\s\S]*?color:\s*transparent;/,
-  "Transparent navigation hit targets must not reveal a duplicate label on hover.",
+  "Home navigation labels must remain visible on hover and keyboard focus.",
 );
 
 assert.match(
   css,
-  /\.site-header--over-image \.primary-nav\s*{[\s\S]*?position:\s*absolute;[\s\S]*?grid-template-columns:\s*4\.2vw 3\.4vw 4\.25vw 2\.15vw;[\s\S]*?right:\s*\.4vw;/,
-  "Home navigation hit targets must align with the labels baked into the hero image.",
+  /\.site-header--over-image \.primary-nav\s*{[\s\S]*?display:\s*flex;[\s\S]*?color:\s*var\(--white\);/,
+  "Home navigation must use the header's vertically centered flex alignment.",
 );
+
+assert.match(home, /src="assets\/images\/home-project-01\.jpg"/);
 
 assert.doesNotMatch(home, /class="home-project-title"/);
 assert.doesNotMatch(css, /\.home-project-title/);
