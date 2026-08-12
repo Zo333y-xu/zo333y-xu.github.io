@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const test = require("node:test");
 
 const { matchesProjectFilter } = require("../assets/project-filter.cjs");
+const projects = require("../data/projects.cjs");
 
 const project = {
   type: "FMCG",
@@ -37,4 +38,16 @@ test("does not use project search text for a category filter", () => {
 test("matches search text without regard to case", () => {
   assert.equal(matchesProjectFilter(project, { search: "VOLVO" }), true);
   assert.equal(matchesProjectFilter(project, { search: "unknown" }), false);
+});
+
+test("catalog projects can be found by each assigned canonical service", () => {
+  for (const project of projects) {
+    for (const service of project.services) {
+      assert.equal(
+        matchesProjectFilter(project, { search: service.toLowerCase() }),
+        true,
+        `${project.slug} must be searchable by ${service}`,
+      );
+    }
+  }
 });

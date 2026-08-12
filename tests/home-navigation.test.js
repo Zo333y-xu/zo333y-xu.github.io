@@ -5,6 +5,8 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const css = fs.readFileSync(path.join(root, "assets", "styles.css"), "utf8");
 const home = fs.readFileSync(path.join(root, "index.html"), "utf8");
+const projectsPage = fs.readFileSync(path.join(root, "projects.html"), "utf8");
+const placeholderSvg = fs.readFileSync(path.join(root, "assets", "images", "project-placeholder.svg"), "utf8");
 
 function cssRule(selector) {
   const start = css.indexOf(selector);
@@ -18,6 +20,12 @@ function cssRule(selector) {
     if (depth === 0) return css.slice(open + 1, index);
   }
   assert.fail(`Missing closing brace for: ${selector}`);
+}
+
+function hasCssDeclaration(selector, declaration) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return [...css.matchAll(new RegExp(`${escapedSelector}\\s*\\{([^{}]*)\\}`, "g"))]
+    .some((match) => declaration.test(match[1]));
 }
 
 for (const [label, href] of [
@@ -55,6 +63,26 @@ assert.doesNotMatch(home, /home-project-02\.jpg/);
 
 assert.doesNotMatch(home, /class="home-project-title"/);
 assert.doesNotMatch(css, /\.home-project-title/);
+
+assert.equal(
+  (home.match(/class="work-panel-caption"/g) || []).length,
+  10,
+  "Every placeholder home panel needs a visible project-specific caption.",
+);
+assert.match(
+  cssRule('.work-panel[data-placeholder] .work-panel-caption'),
+  /position:\s*absolute;/,
+  "Placeholder captions must be visible in the base desktop/touch presentation.",
+);
+
+assert.equal(
+  (projectsPage.match(/class="project-card reveal"[^>]*data-placeholder/g) || []).length,
+  23,
+  "Every placeholder Projects card must identify itself as a placeholder tile.",
+);
+const placeholderTitleRule = cssRule(".project-card[data-placeholder] .project-title");
+assert.match(placeholderTitleRule, /position:\s*absolute;/);
+assert.doesNotMatch(placeholderTitleRule, /clip:\s*rect|width:\s*1px|height:\s*1px/);
 
 assert.doesNotMatch(home, /data-home-video/);
 assert.doesNotMatch(home, /home-hero-poster\.jpg/);
@@ -102,5 +130,52 @@ assert.match(
   /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\.site-intro[\s\S]*?transition:\s*none\s*!important;/,
   "Reduced-motion mode must remove the intro transition.",
 );
+
+function channel(value) {
+  const normalized = value / 255;
+  return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+}
+
+function contrastRatio(hex, background = "#ffffff") {
+  const rgb = (color) => [1, 3, 5].map((index) => Number.parseInt(color.slice(index, index + 2), 16));
+  const luminance = (color) => {
+    const [red, green, blue] = rgb(color).map(channel);
+    return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+  };
+  const first = luminance(hex);
+  const second = luminance(background);
+  return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
+}
+
+const gray = css.match(/--gray:\s*(#[0-9a-f]{6});/i)?.[1];
+assert.ok(gray, "The shared gray token must be a six-digit hex color.");
+assert.ok(
+  contrastRatio(gray) >= 4.5,
+  `Interactive gray labels need at least 4.5:1 contrast on white; received ${contrastRatio(gray).toFixed(2)}:1.`,
+);
+for (const selector of [".browse-tab", ".browse-panel button", ".browse-panel--search input::placeholder", ".footer-cta a", ".social-links a"]) {
+  assert.ok(hasCssDeclaration(selector, /color:\s*var\(--gray\);/), `${selector} must use the AA gray token.`);
+}
+
+const viewBox = placeholderSvg.match(/viewBox="0 0 (\d+) (\d+)"/);
+assert.ok(viewBox, "Placeholder SVG must expose a numeric viewBox.");
+const [, sourceWidthText, sourceHeightText] = viewBox;
+const sourceWidth = Number(sourceWidthText);
+const sourceHeight = Number(sourceHeightText);
+const mobileWidth = 390;
+const mobileHeight = 844;
+const coverScale = Math.max(mobileWidth / sourceWidth, mobileHeight / sourceHeight);
+const visibleSourceWidth = mobileWidth / coverScale;
+const visibleLeft = (sourceWidth - visibleSourceWidth) / 2;
+const visibleRight = visibleLeft + visibleSourceWidth;
+const textBoxes = [...placeholderSvg.matchAll(/<text[^>]*x="([\d.]+)"[^>]*textLength="([\d.]+)"/g)]
+  .map((match) => ({ center: Number(match[1]), width: Number(match[2]) }));
+assert.ok(textBoxes.length >= 3, "Placeholder artwork must use explicit text bounds for crop verification.");
+for (const box of textBoxes) {
+  assert.ok(
+    box.center - box.width / 2 >= visibleLeft && box.center + box.width / 2 <= visibleRight,
+    `Placeholder text from ${box.center - box.width / 2} to ${box.center + box.width / 2} must survive a centered 390x844 cover crop (${visibleLeft.toFixed(1)} to ${visibleRight.toFixed(1)}).`,
+  );
+}
 
 console.log("Home navigation regression checks passed.");

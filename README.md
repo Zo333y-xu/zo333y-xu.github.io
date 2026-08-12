@@ -4,6 +4,23 @@ The site is generated from one catalog and can be opened from `index.html` or
 served locally. It publishes 23 project records, plus a separate session-once
 intro. Ten catalog projects are selected for the full-viewport home sequence.
 
+## Build and test
+
+Install Node.js 20 or newer with npm, then use the same portable commands on
+Windows, macOS, or Linux:
+
+```sh
+npm test
+npm run build
+```
+
+The build validates the catalog and its local media before changing generated
+output, rewrites the home and Projects pages, reconciles exactly 23 managed
+project directories, and regenerates each detail page. Run both commands before
+publishing.
+
+## Local preview
+
 ```powershell
 python -m http.server 8080
 ```
@@ -33,8 +50,11 @@ other projects fill the available Browse More slots.
 
 ## Media replacement
 
-The intro asset is published at `assets/videos/site-intro.mp4`. Project media
-belongs in `assets/images/` and `assets/videos/`.
+The supplied intro source is outside the repository at
+`D:\xwechat_files\wxid_mo3c9nf8jys422_6f51\msg\video\2026-08\b891f7949b42d0d7c7d76e621006ce1c.mp4`.
+Its published site path is `assets/videos/site-intro.mp4`; only the published
+path is referenced by generated HTML. Project media belongs in `assets/images/`
+and `assets/videos/`.
 
 When final artwork is unavailable, set `poster` to
 `assets/images/project-placeholder.svg`. When a verified local MP4 is
@@ -43,17 +63,3 @@ readable `Video coming soon` fallback and may show the HTTPS `sourceUrl` as an
 ordinary external link. To publish final media, replace the placeholder path
 with the new local poster path and/or replace `null` with the local MP4 path,
 keep the project slug unchanged, and rebuild.
-
-## Build and test
-
-Use the bundled Node runtime; no dependency installation is required.
-
-```powershell
-$node = "C:\Users\xuziw\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"
-& $node scripts/build.cjs
-& $node --test tests/*.test.js
-```
-
-The build validates the catalog, rewrites the home and Projects pages,
-reconciles exactly 23 managed project directories, and regenerates each detail
-page. Run both commands before publishing.

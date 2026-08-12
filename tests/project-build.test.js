@@ -39,12 +39,29 @@ const validProject = {
 };
 
 function completeCatalog(overrides = {}) {
-  return Array.from({ length: 10 }, (_, index) => ({
+  return Array.from({ length: 23 }, (_, index) => ({
     ...validProject,
     slug: `project-${index + 1}`,
-    featuredOrder: index + 1,
+    poster: "assets/images/project-placeholder.svg",
+    video: null,
+    featuredOrder: index < 10 ? index + 1 : null,
     ...overrides,
   }));
+}
+
+function catalogWithProject(overrides, index = 0) {
+  const catalog = completeCatalog();
+  catalog[index] = { ...catalog[index], ...overrides };
+  return catalog;
+}
+
+function writeCatalogMedia(rootDir, catalog) {
+  const assetPaths = new Set(catalog.flatMap((project) => [project.poster, project.video].filter(Boolean)));
+  for (const assetPath of assetPaths) {
+    const outputPath = path.join(rootDir, ...assetPath.split("/"));
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, "test media");
+  }
 }
 
 test("validateProjects accepts a complete featured catalog", () => {
@@ -52,46 +69,53 @@ test("validateProjects accepts a complete featured catalog", () => {
 });
 
 test("validateProjects rejects duplicate slugs", () => {
+  const catalog = catalogWithProject({ slug: "project-1" }, 1);
   assert.throws(
-    () => validateProjects([validProject, { ...validProject }]),
-    /duplicate slug: the-dawn/,
+    () => validateProjects(catalog),
+    /duplicate slug: project-1/,
   );
 });
 
 test("validateProjects identifies a missing required field", () => {
   assert.throws(
-    () => validateProjects([{ ...validProject, titleZh: "" }]),
-    /the-dawn: missing titleZh/,
+    () => validateProjects(catalogWithProject({ titleZh: "" })),
+    /project-1: missing titleZh/,
   );
 });
 
 test("validateProjects rejects noncanonical or duplicate featured metadata", () => {
   assert.throws(
-    () => validateProjects([{ ...validProject, services: ["AI-Generated"] }]),
-    /the-dawn: invalid services/,
+    () => validateProjects(catalogWithProject({ services: ["AI-Generated"] })),
+    /project-1: invalid services/,
   );
   assert.throws(
-    () => validateProjects([
-      { ...validProject, slug: "a", featuredOrder: 1 },
-      { ...validProject, slug: "b", featuredOrder: 1 },
-    ]),
+    () => validateProjects(catalogWithProject({ featuredOrder: 1 }, 1)),
     /duplicate featuredOrder/,
   );
   assert.throws(
-    () => validateProjects([{ ...validProject, featuredOrder: 11 }]),
-    /the-dawn: invalid featuredOrder/,
+    () => validateProjects(catalogWithProject({ featuredOrder: 11 })),
+    /project-1: invalid featuredOrder/,
   );
   assert.throws(
-    () => validateProjects([{ ...validProject, featuredOrder: 1 }]),
+    () => validateProjects(catalogWithProject({ featuredOrder: null })),
     /featuredOrder values must cover 1 through 10/,
+  );
+});
+
+test("validateProjects rejects catalogs smaller or larger than 23 projects", () => {
+  const catalog = completeCatalog();
+  assert.throws(() => validateProjects(catalog.slice(0, -1)), /catalog must contain exactly 23 projects/);
+  assert.throws(
+    () => validateProjects([...catalog, { ...catalog.at(-1), slug: "project-24" }]),
+    /catalog must contain exactly 23 projects/,
   );
 });
 
 test("validateProjects only accepts null or non-empty video strings", () => {
   for (const [field, value] of [["video", ""], ["video", 1]]) {
     assert.throws(
-      () => validateProjects([{ ...validProject, [field]: value }]),
-      new RegExp(`the-dawn: invalid ${field}`),
+      () => validateProjects(catalogWithProject({ [field]: value })),
+      new RegExp(`project-1: invalid ${field}`),
     );
   }
   assert.doesNotThrow(() => validateProjects(completeCatalog({ video: null, sourceUrl: null })));
@@ -106,6 +130,35 @@ test("validateProjects accepts only null or valid HTTPS source URLs", () => {
       () => validateProjects(completeCatalog({ sourceUrl })),
       /project-1: invalid sourceUrl/,
     );
+  }
+});
+
+test("validateProjects requires normalized repository-local poster and MP4 paths", () => {
+  assert.doesNotThrow(() => validateProjects(completeCatalog({
+    poster: "assets/images/project-placeholder.svg",
+    video: "assets/videos/project-preview.mp4",
+  })));
+
+  for (const poster of [
+    "https://example.com/poster.jpg",
+    "../assets/images/poster.jpg",
+    "assets/images/../videos/poster.jpg",
+    "assets\\images\\poster.jpg",
+    "assets/videos/poster.jpg",
+  ]) {
+    assert.throws(() => validateProjects(catalogWithProject({ poster })), /project-1: invalid poster/);
+  }
+
+  for (const video of [
+    "https://www.xinpianchang.com/a13700638",
+    "../assets/videos/project.mp4",
+    "assets/videos/../images/project.mp4",
+    "assets\\videos\\project.mp4",
+    "assets/images/project.mp4",
+    "assets/videos/project.webm",
+    "assets/videos/nested/project.mp4",
+  ]) {
+    assert.throws(() => validateProjects(catalogWithProject({ video })), /project-1: invalid video/);
   }
 });
 
@@ -128,6 +181,17 @@ test("catalog uses canonical types and service labels", () => {
     project.services.forEach((service) => assert.ok(SERVICE_VALUES.includes(service), service));
   }
   assert.doesNotMatch(JSON.stringify(projects), /AI-Generated|CG&VFX/);
+});
+
+test("catalog search text includes every assigned canonical service", () => {
+  for (const project of projects) {
+    for (const service of project.services) {
+      assert.ok(
+        project.search.toLowerCase().includes(service.toLowerCase()),
+        `${project.slug} search must include ${service}`,
+      );
+    }
+  }
 });
 
 test("recommendations preserve valid explicit order and exclude current project", () => {
@@ -162,6 +226,20 @@ test("project cards serialize every assigned service for independent directory U
   assert.match(html, /data-services="AIGC\|CG &amp; VFX"/);
   assert.doesNotMatch(html, /data-service="/);
   assert.doesNotMatch(html, /href="#"/);
+});
+
+test("placeholder project cards render a visible project-specific caption", () => {
+  const html = renderProjectCard({
+    ...validProject,
+    title: "HUAWEI FreeBuds Pro 3",
+    titleZh: "领听原声 不同凡响",
+    poster: "assets/images/project-placeholder.svg",
+  });
+
+  assert.match(html, /data-placeholder/);
+  assert.match(html, /class="project-title"/);
+  assert.match(html, />HUAWEI FreeBuds Pro 3</);
+  assert.match(html, />领听原声 不同凡响</);
 });
 
 test("projects page lists canonical service filters in display order", () => {
@@ -224,6 +302,12 @@ test("real-video media retains the lazy player script contract", () => {
   assert.match(html, /preload="metadata"/);
   assert.match(html, /playsinline/);
   assert.match(html, /aria-label="Play The Dawn"/);
+});
+
+test("real-video media refuses non-local or non-MP4 sources even if rendering is called directly", () => {
+  for (const video of ["https://www.xinpianchang.com/a13700638", "../outside.mp4", "assets/videos/project.webm"]) {
+    assert.throws(() => renderProjectMedia({ ...validProject, video }), /invalid video/);
+  }
 });
 
 test("detail page contains accessible lazy MP4 player and project content", () => {
@@ -292,6 +376,7 @@ test("home project panel uses direct detail links, project poster and image alt 
   const html = renderHomeProject({
     ...validProject,
     slug: "huawei-freebuds-pro-3",
+    title: "HUAWEI FreeBuds Pro 3",
     poster: "assets/images/project-placeholder.svg",
     imageAlt: "Floating earbuds in a silver case",
   }, { lazy: true });
@@ -301,6 +386,8 @@ test("home project panel uses direct detail links, project poster and image alt 
   assert.match(html, /src="assets\/images\/project-placeholder\.svg"/);
   assert.match(html, /alt="Floating earbuds in a silver case"/);
   assert.match(html, /loading="lazy"/);
+  assert.match(html, /data-placeholder/);
+  assert.match(html, /class="work-panel-caption">HUAWEI FreeBuds Pro 3</);
   assert.doesNotMatch(html, /href="projects\.html"/);
 });
 
@@ -316,6 +403,8 @@ test("home page renders the first featured image eagerly and remaining panels la
 
 test("buildSite writes the generated home page before projects and detail pages", () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const catalog = completeCatalog();
+  writeCatalogMedia(tempRoot, catalog);
   const writes = [];
   const trackingFs = {
     ...fs,
@@ -326,7 +415,7 @@ test("buildSite writes the generated home page before projects and detail pages"
   };
 
   try {
-    buildSite({ rootDir: tempRoot, projects: completeCatalog(), fs: trackingFs, path });
+    buildSite({ rootDir: tempRoot, projects: catalog, fs: trackingFs, path });
     assert.equal(writes[0], "index.html");
     assert.equal(writes[1], "projects.html");
     const home = fs.readFileSync(path.join(tempRoot, "index.html"), "utf8");
@@ -338,6 +427,8 @@ test("buildSite writes the generated home page before projects and detail pages"
 
 test("buildSite prunes stale project directories without touching files outside projects", () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const catalog = completeCatalog();
+  writeCatalogMedia(tempRoot, catalog);
   const staleDirectory = path.join(tempRoot, "projects", "stale-project");
   const outsideFile = path.join(tempRoot, "keep-me.txt");
 
@@ -346,7 +437,7 @@ test("buildSite prunes stale project directories without touching files outside 
   fs.writeFileSync(outsideFile, "keep");
 
   try {
-    buildSite({ rootDir: tempRoot, projects: completeCatalog(), fs, path });
+    buildSite({ rootDir: tempRoot, projects: catalog, fs, path });
 
     assert.equal(fs.existsSync(staleDirectory), false);
     assert.equal(fs.readFileSync(outsideFile, "utf8"), "keep");
@@ -355,8 +446,68 @@ test("buildSite prunes stale project directories without touching files outside 
         .filter((entry) => entry.isDirectory())
         .map((entry) => entry.name)
         .sort(),
-      completeCatalog().map((project) => project.slug).sort(),
+      catalog.map((project) => project.slug).sort(),
     );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test("buildSite rejects wrong catalog counts before filesystem mutations", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const mutations = [];
+  const trackingFs = {
+    ...fs,
+    mkdirSync(...args) { mutations.push("mkdir"); return fs.mkdirSync(...args); },
+    rmSync(...args) { mutations.push("rm"); return fs.rmSync(...args); },
+    writeFileSync(...args) { mutations.push("write"); return fs.writeFileSync(...args); },
+  };
+
+  try {
+    const catalog = completeCatalog();
+    assert.throws(
+      () => buildSite({ rootDir: tempRoot, projects: catalog.slice(0, -1), fs: trackingFs, path }),
+      /catalog must contain exactly 23 projects/,
+    );
+    assert.throws(
+      () => buildSite({ rootDir: tempRoot, projects: [...catalog, { ...catalog.at(-1), slug: "project-24" }], fs: trackingFs, path }),
+      /catalog must contain exactly 23 projects/,
+    );
+    assert.deepEqual(mutations, []);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test("buildSite rejects missing poster or video files before output mutations", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const mutations = [];
+  const trackingFs = {
+    ...fs,
+    mkdirSync(...args) { mutations.push("mkdir"); return fs.mkdirSync(...args); },
+    rmSync(...args) { mutations.push("rm"); return fs.rmSync(...args); },
+    writeFileSync(...args) { mutations.push("write"); return fs.writeFileSync(...args); },
+  };
+
+  try {
+    assert.throws(
+      () => buildSite({ rootDir: tempRoot, projects: completeCatalog(), fs: trackingFs, path }),
+      /project-1: missing poster asset/,
+    );
+    assert.deepEqual(mutations, []);
+
+    writeCatalogMedia(tempRoot, completeCatalog());
+    mutations.length = 0;
+    assert.throws(
+      () => buildSite({
+        rootDir: tempRoot,
+        projects: catalogWithProject({ video: "assets/videos/project-1.mp4" }),
+        fs: trackingFs,
+        path,
+      }),
+      /project-1: missing video asset/,
+    );
+    assert.deepEqual(mutations, []);
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
@@ -377,6 +528,8 @@ function createDirectoryLinkOrSkip(t, target, link) {
 
 test("buildSite rejects a linked project root without touching its external target", (t) => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const catalog = completeCatalog();
+  writeCatalogMedia(tempRoot, catalog);
   const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-external-"));
   const projectRoot = path.join(tempRoot, "projects");
   const sentinel = path.join(externalRoot, "sentinel.txt");
@@ -386,7 +539,7 @@ test("buildSite rejects a linked project root without touching its external targ
     if (!createDirectoryLinkOrSkip(t, externalRoot, projectRoot)) return;
 
     assert.throws(
-      () => buildSite({ rootDir: tempRoot, projects: completeCatalog(), fs, path }),
+      () => buildSite({ rootDir: tempRoot, projects: catalog, fs, path }),
       /invalid project root/,
     );
     assert.equal(fs.readFileSync(sentinel, "utf8"), "outside");
@@ -399,6 +552,8 @@ test("buildSite rejects a linked project root without touching its external targ
 
 test("buildSite rejects linked project children without touching their external target", (t) => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const catalog = completeCatalog();
+  writeCatalogMedia(tempRoot, catalog);
   const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-external-"));
   const projectRoot = path.join(tempRoot, "projects");
   const linkedChild = path.join(projectRoot, "stale-project");
@@ -410,7 +565,7 @@ test("buildSite rejects linked project children without touching their external 
     if (!createDirectoryLinkOrSkip(t, externalRoot, linkedChild)) return;
 
     assert.throws(
-      () => buildSite({ rootDir: tempRoot, projects: completeCatalog(), fs, path }),
+      () => buildSite({ rootDir: tempRoot, projects: catalog, fs, path }),
       /invalid project output link/,
     );
     assert.equal(fs.readFileSync(sentinel, "utf8"), "outside");
@@ -423,6 +578,8 @@ test("buildSite rejects linked project children without touching their external 
 
 test("buildSite rejects a project root swapped after preflight before external writes", (t) => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const catalog = completeCatalog();
+  writeCatalogMedia(tempRoot, catalog);
   const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-external-"));
   const projectRoot = path.join(tempRoot, "projects");
   const sentinel = path.join(externalRoot, "sentinel.txt");
@@ -441,7 +598,7 @@ test("buildSite rejects a project root swapped after preflight before external w
 
   try {
     assert.throws(
-      () => buildSite({ rootDir: tempRoot, projects: completeCatalog(), fs: swappingFs, path }),
+      () => buildSite({ rootDir: tempRoot, projects: catalog, fs: swappingFs, path }),
       /invalid project root|project root changed/,
     );
     if (!swapped) return;
@@ -455,6 +612,8 @@ test("buildSite rejects a project root swapped after preflight before external w
 
 test("buildSite rejects a managed child swapped after preflight before external writes", (t) => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const catalog = completeCatalog();
+  writeCatalogMedia(tempRoot, catalog);
   const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-external-"));
   const projectRoot = path.join(tempRoot, "projects");
   const managedProject = path.join(projectRoot, "project-1");
@@ -475,7 +634,7 @@ test("buildSite rejects a managed child swapped after preflight before external 
 
   try {
     assert.throws(
-      () => buildSite({ rootDir: tempRoot, projects: completeCatalog(), fs: swappingFs, path }),
+      () => buildSite({ rootDir: tempRoot, projects: catalog, fs: swappingFs, path }),
       /invalid project output link|project child changed/,
     );
     if (!swapped) return;

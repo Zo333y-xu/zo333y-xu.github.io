@@ -1,5 +1,9 @@
+const { posix } = require("node:path");
+
 const TYPE_VALUES = ["3C & Tech", "Automotive", "FMCG", "Beauty & Fashion", "Short Film"];
 const SERVICE_VALUES = ["AIGC", "CG & VFX", "2D Animation", "Online"];
+const PROJECT_COUNT = 23;
+const PLACEHOLDER_POSTER = "assets/images/project-placeholder.svg";
 const REQUIRED_FIELDS = [
   "slug", "title", "titleZh", "background", "poster", "imageAlt",
   "type", "services", "search", "recommendedProjects",
@@ -24,12 +28,37 @@ function isHttpsUrl(value) {
   }
 }
 
+function isNormalizedAssetPath(value, directory, extension = null, directChild = false) {
+  if (typeof value !== "string" || value.trim() !== value || value === "" || value.includes("\\")) return false;
+  if (posix.normalize(value) !== value) return false;
+
+  const relativePath = posix.relative(directory, value);
+  if (relativePath === "" || relativePath === ".." || relativePath.startsWith("../") || posix.isAbsolute(relativePath)) return false;
+  if (directChild && relativePath.includes("/")) return false;
+  return extension === null || relativePath.endsWith(extension);
+}
+
+function isNormalizedPosterPath(value) {
+  return isNormalizedAssetPath(value, "assets/images");
+}
+
+function isNormalizedVideoPath(value) {
+  return isNormalizedAssetPath(value, "assets/videos", ".mp4", true);
+}
+
+function isPlaceholderPoster(value) {
+  return value === PLACEHOLDER_POSTER;
+}
+
 function isResolvedChildPath(parentPath, childPath, path) {
   const relativePath = path.relative(parentPath, childPath);
   return relativePath !== "" && relativePath !== ".." && !relativePath.startsWith(`..${path.sep}`) && !path.isAbsolute(relativePath);
 }
 
 function validateProjects(projects) {
+  if (!Array.isArray(projects) || projects.length !== PROJECT_COUNT) {
+    throw new Error(`catalog must contain exactly ${PROJECT_COUNT} projects`);
+  }
   const slugs = new Set();
   const featuredOrders = [];
   for (const project of projects) {
@@ -47,7 +76,8 @@ function validateProjects(projects) {
 
     if (typeof project.client !== "string") throw new Error(`${project.slug}: invalid client`);
     if (!Number.isInteger(project.year)) throw new Error(`${project.slug}: invalid year`);
-    if (project.video !== null && (typeof project.video !== "string" || project.video.trim() === "")) {
+    if (!isNormalizedPosterPath(project.poster)) throw new Error(`${project.slug}: invalid poster`);
+    if (project.video !== null && !isNormalizedVideoPath(project.video)) {
       throw new Error(`${project.slug}: invalid video`);
     }
     if (project.sourceUrl !== null && !isHttpsUrl(project.sourceUrl)) {
@@ -101,8 +131,12 @@ function selectFeaturedProjects(projects) {
 
 function renderHomeProject(project, options = {}) {
   const loading = options.lazy ? ' loading="lazy"' : "";
-  return `    <a class="work-panel reveal" href="projects/${escapeHtml(project.slug)}/" aria-label="${escapeHtml(project.title)}">
+  const placeholder = isPlaceholderPoster(project.poster);
+  const placeholderAttribute = placeholder ? " data-placeholder" : "";
+  const caption = placeholder ? `\n      <span class="work-panel-caption">${escapeHtml(project.title)}</span>` : "";
+  return `    <a class="work-panel reveal" href="projects/${escapeHtml(project.slug)}/"${placeholderAttribute} aria-label="${escapeHtml(project.title)}">
       <img src="${escapeHtml(project.poster)}" alt="${escapeHtml(project.imageAlt)}"${loading}>
+${caption}
     </a>`;
 }
 
@@ -148,9 +182,10 @@ ${panels}
 
 function renderProjectCard(project, prefix = "") {
   const href = `${prefix}projects/${escapeHtml(project.slug)}/`;
-  return `      <a class="project-card reveal" href="${href}" data-type="${escapeHtml(project.type)}" data-services="${escapeHtml(project.services.join("|"))}" data-search="${escapeHtml(project.search)}">
+  const placeholderAttribute = isPlaceholderPoster(project.poster) ? " data-placeholder" : "";
+  return `      <a class="project-card reveal" href="${href}"${placeholderAttribute} data-type="${escapeHtml(project.type)}" data-services="${escapeHtml(project.services.join("|"))}" data-search="${escapeHtml(project.search)}">
         <img src="${prefix}${escapeHtml(project.poster)}" alt="${escapeHtml(project.imageAlt)}" loading="lazy">
-        <span class="project-title"><span>${escapeHtml(project.title)}</span></span>
+        <span class="project-title"><span>${escapeHtml(project.title)}</span><small>${escapeHtml(project.titleZh)}</small></span>
         <span class="project-hover">OPEN <span>watch<br>see case</span></span>
       </a>`;
 }
@@ -227,6 +262,7 @@ function renderRecommendation(project) {
 
 function renderProjectMedia(project) {
   if (project.video !== null) {
+    if (!isNormalizedVideoPath(project.video)) throw new Error(`${project.slug}: invalid video`);
     return `    <section class="project-player" data-project-player>
       <video poster="../../${escapeHtml(project.poster)}" data-video-src="../../${escapeHtml(project.video)}" preload="metadata" playsinline controls aria-label="${escapeHtml(project.title)} video"></video>
       <button class="project-play-button" type="button" data-play-project aria-label="Play ${escapeHtml(project.title)}"><span aria-hidden="true"></span></button>
@@ -358,8 +394,41 @@ function assertProjectChildAbsent(projectRoot, name, fs, path) {
   throw new Error(`project child changed: ${name}`);
 }
 
+function validateProjectAsset(rootDir, project, field, fs, path) {
+  const assetPath = project[field];
+  if (assetPath === null) return;
+
+  const absoluteRoot = path.resolve(rootDir);
+  const absoluteAsset = path.resolve(absoluteRoot, ...assetPath.split("/"));
+  let assetStats;
+  try {
+    assetStats = fs.lstatSync(absoluteAsset);
+  } catch (error) {
+    if (error.code === "ENOENT") throw new Error(`${project.slug}: missing ${field} asset`);
+    throw error;
+  }
+
+  if (!assetStats.isFile() || assetStats.isSymbolicLink()) {
+    throw new Error(`${project.slug}: invalid ${field} asset`);
+  }
+
+  const canonicalRoot = fs.realpathSync(absoluteRoot);
+  const canonicalAsset = fs.realpathSync(absoluteAsset);
+  if (!isResolvedChildPath(canonicalRoot, canonicalAsset, path)) {
+    throw new Error(`${project.slug}: invalid ${field} asset`);
+  }
+}
+
+function validateProjectAssets(rootDir, projects, fs, path) {
+  for (const project of projects) {
+    validateProjectAsset(rootDir, project, "poster", fs, path);
+    validateProjectAsset(rootDir, project, "video", fs, path);
+  }
+}
+
 function buildSite({ rootDir, projects, fs, path }) {
   validateProjects(projects);
+  validateProjectAssets(rootDir, projects, fs, path);
   const projectRoot = path.resolve(rootDir, "projects");
   const projectSlugs = new Set(projects.map((project) => project.slug));
   let rootSnapshot = inspectProjectRoot(rootDir, projectRoot, fs, path);

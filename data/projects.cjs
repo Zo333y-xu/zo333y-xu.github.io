@@ -14,7 +14,7 @@ function project({ slug, title, titleZh, client = "", year, type, services, sour
     imageAlt: `${title} project preview`,
     type,
     services,
-    search: [titleZh, title, client, year, type].filter(Boolean).join(" "),
+    search: [titleZh, title, client, year, type, ...services].filter(Boolean).join(" "),
     featuredOrder,
     recommendedProjects: [],
   };
