@@ -291,59 +291,120 @@ ${recommendedCards}
 </html>`;
 }
 
-function buildSite({ rootDir, projects, fs, path }) {
-  validateProjects(projects);
-  const projectRoot = path.resolve(rootDir, "projects");
-  const projectSlugs = new Set(projects.map((project) => project.slug));
+function inspectProjectRoot(rootDir, projectRoot, fs, path) {
   let projectRootStats;
   try {
     projectRootStats = fs.lstatSync(projectRoot);
   } catch (error) {
-    if (error.code !== "ENOENT") throw error;
+    if (error.code === "ENOENT") return null;
+    throw error;
+  }
+  if (!projectRootStats.isDirectory() || projectRootStats.isSymbolicLink()) {
+    throw new Error("invalid project root");
   }
 
-  if (projectRootStats) {
-    if (!projectRootStats.isDirectory() || projectRootStats.isSymbolicLink()) {
-      throw new Error("invalid project root");
-    }
-
-    const canonicalProjectRoot = fs.realpathSync(projectRoot);
-    const expectedProjectRoot = path.resolve(fs.realpathSync(path.resolve(rootDir)), "projects");
-    if (path.relative(expectedProjectRoot, canonicalProjectRoot) !== "") {
-      throw new Error("invalid project root");
-    }
-
-    const projectEntries = fs.readdirSync(projectRoot, { withFileTypes: true });
-    for (const entry of projectEntries) {
-      const projectPath = path.resolve(projectRoot, entry.name);
-      const projectStats = fs.lstatSync(projectPath);
-      if (projectStats.isSymbolicLink()) {
-        throw new Error(`invalid project output link: ${entry.name}`);
-      }
-      const canonicalProjectPath = fs.realpathSync(projectPath);
-      if (!isResolvedChildPath(canonicalProjectRoot, canonicalProjectPath, path)) {
-        throw new Error(`invalid project output link: ${entry.name}`);
-      }
-    }
-
-    for (const entry of projectEntries) {
-      if (!entry.isDirectory() || projectSlugs.has(entry.name)) continue;
-
-      const staleDirectory = path.resolve(projectRoot, entry.name);
-      if (!isResolvedChildPath(projectRoot, staleDirectory, path)) {
-        throw new Error(`invalid stale project output path: ${entry.name}`);
-      }
-      fs.rmSync(staleDirectory, { recursive: true, force: false });
-    }
+  const canonicalProjectRoot = fs.realpathSync(projectRoot);
+  const expectedProjectRoot = path.resolve(fs.realpathSync(path.resolve(rootDir)), "projects");
+  if (path.relative(expectedProjectRoot, canonicalProjectRoot) !== "") {
+    throw new Error("invalid project root");
   }
+  return { canonicalProjectRoot, dev: projectRootStats.dev, ino: projectRootStats.ino };
+}
+
+function assertProjectRootUnchanged(snapshot, rootDir, projectRoot, fs, path) {
+  const current = inspectProjectRoot(rootDir, projectRoot, fs, path);
+  if (!current || current.canonicalProjectRoot !== snapshot.canonicalProjectRoot || current.dev !== snapshot.dev || current.ino !== snapshot.ino) {
+    throw new Error("project root changed");
+  }
+  return current;
+}
+
+function inspectProjectChild(rootSnapshot, projectRoot, name, fs, path) {
+  const projectPath = path.resolve(projectRoot, name);
+  if (!isResolvedChildPath(projectRoot, projectPath, path)) {
+    throw new Error(`invalid project output link: ${name}`);
+  }
+
+  const projectStats = fs.lstatSync(projectPath);
+  if (projectStats.isSymbolicLink()) {
+    throw new Error(`invalid project output link: ${name}`);
+  }
+  const canonicalProjectPath = fs.realpathSync(projectPath);
+  if (!isResolvedChildPath(rootSnapshot.canonicalProjectRoot, canonicalProjectPath, path)) {
+    throw new Error(`invalid project output link: ${name}`);
+  }
+  return { canonicalProjectPath, dev: projectStats.dev, ino: projectStats.ino };
+}
+
+function assertProjectChildUnchanged(snapshot, rootSnapshot, projectRoot, name, fs, path) {
+  const current = inspectProjectChild(rootSnapshot, projectRoot, name, fs, path);
+  if (current.canonicalProjectPath !== snapshot.canonicalProjectPath || current.dev !== snapshot.dev || current.ino !== snapshot.ino) {
+    throw new Error(`project child changed: ${name}`);
+  }
+  return current;
+}
+
+function assertProjectChildAbsent(projectRoot, name, fs, path) {
+  const projectPath = path.resolve(projectRoot, name);
+  if (!isResolvedChildPath(projectRoot, projectPath, path)) {
+    throw new Error(`invalid project output path: ${name}`);
+  }
+  try {
+    fs.lstatSync(projectPath);
+  } catch (error) {
+    if (error.code === "ENOENT") return;
+    throw error;
+  }
+  throw new Error(`project child changed: ${name}`);
+}
+
+function buildSite({ rootDir, projects, fs, path }) {
+  validateProjects(projects);
+  const projectRoot = path.resolve(rootDir, "projects");
+  const projectSlugs = new Set(projects.map((project) => project.slug));
+  let rootSnapshot = inspectProjectRoot(rootDir, projectRoot, fs, path);
+  if (!rootSnapshot) {
+    if (inspectProjectRoot(rootDir, projectRoot, fs, path) !== null) {
+      throw new Error("project root changed");
+    }
+    fs.mkdirSync(projectRoot, { recursive: true });
+    rootSnapshot = inspectProjectRoot(rootDir, projectRoot, fs, path);
+  }
+
+  const projectEntries = fs.readdirSync(projectRoot, { withFileTypes: true });
+  const childSnapshots = new Map(projectEntries.map((entry) => [
+    entry.name,
+    inspectProjectChild(rootSnapshot, projectRoot, entry.name, fs, path),
+  ]));
+  if (typeof fs.onProjectPreflight === "function") fs.onProjectPreflight();
+
+  for (const entry of projectEntries) {
+    if (!entry.isDirectory() || projectSlugs.has(entry.name)) continue;
+
+    assertProjectRootUnchanged(rootSnapshot, rootDir, projectRoot, fs, path);
+    assertProjectChildUnchanged(childSnapshots.get(entry.name), rootSnapshot, projectRoot, entry.name, fs, path);
+    fs.rmSync(path.resolve(projectRoot, entry.name), { recursive: true, force: false });
+  }
+
+  assertProjectRootUnchanged(rootSnapshot, rootDir, projectRoot, fs, path);
   fs.writeFileSync(path.join(rootDir, "index.html"), renderHomePage(projects));
+  assertProjectRootUnchanged(rootSnapshot, rootDir, projectRoot, fs, path);
   fs.writeFileSync(path.join(rootDir, "projects.html"), renderProjectsPage(projects));
+
   for (const project of projects) {
-    const outputDirectory = path.resolve(rootDir, "projects", project.slug);
-    if (!isResolvedChildPath(projectRoot, outputDirectory, path)) {
-      throw new Error(`invalid project output path: ${project.slug}`);
+    const outputDirectory = path.resolve(projectRoot, project.slug);
+    if (childSnapshots.has(project.slug)) {
+      assertProjectRootUnchanged(rootSnapshot, rootDir, projectRoot, fs, path);
+      assertProjectChildUnchanged(childSnapshots.get(project.slug), rootSnapshot, projectRoot, project.slug, fs, path);
+    } else {
+      assertProjectRootUnchanged(rootSnapshot, rootDir, projectRoot, fs, path);
+      assertProjectChildAbsent(projectRoot, project.slug, fs, path);
     }
     fs.mkdirSync(outputDirectory, { recursive: true });
+
+    const childSnapshot = inspectProjectChild(rootSnapshot, projectRoot, project.slug, fs, path);
+    assertProjectRootUnchanged(rootSnapshot, rootDir, projectRoot, fs, path);
+    assertProjectChildUnchanged(childSnapshot, rootSnapshot, projectRoot, project.slug, fs, path);
     const recommendations = selectRecommendations(project.slug, projects);
     fs.writeFileSync(path.join(outputDirectory, "index.html"), renderProjectDetail(project, recommendations));
   }

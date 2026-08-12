@@ -420,3 +420,69 @@ test("buildSite rejects linked project children without touching their external 
     fs.rmSync(externalRoot, { recursive: true, force: true });
   }
 });
+
+test("buildSite rejects a project root swapped after preflight before external writes", (t) => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-external-"));
+  const projectRoot = path.join(tempRoot, "projects");
+  const sentinel = path.join(externalRoot, "sentinel.txt");
+  fs.mkdirSync(path.join(projectRoot, "stale-project"), { recursive: true });
+  fs.writeFileSync(sentinel, "outside");
+
+  let swapped = false;
+  const swappingFs = {
+    ...fs,
+    onProjectPreflight() {
+      fs.rmSync(projectRoot, { recursive: true, force: true });
+      if (!createDirectoryLinkOrSkip(t, externalRoot, projectRoot)) return;
+      swapped = true;
+    },
+  };
+
+  try {
+    assert.throws(
+      () => buildSite({ rootDir: tempRoot, projects: completeCatalog(), fs: swappingFs, path }),
+      /invalid project root|project root changed/,
+    );
+    if (!swapped) return;
+    assert.equal(fs.readFileSync(sentinel, "utf8"), "outside");
+    assert.equal(fs.existsSync(path.join(externalRoot, "project-1")), false);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+    fs.rmSync(externalRoot, { recursive: true, force: true });
+  }
+});
+
+test("buildSite rejects a managed child swapped after preflight before external writes", (t) => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-external-"));
+  const projectRoot = path.join(tempRoot, "projects");
+  const managedProject = path.join(projectRoot, "project-1");
+  const sentinel = path.join(externalRoot, "sentinel.txt");
+  fs.mkdirSync(managedProject, { recursive: true });
+  fs.writeFileSync(path.join(managedProject, "index.html"), "existing");
+  fs.writeFileSync(sentinel, "outside");
+
+  let swapped = false;
+  const swappingFs = {
+    ...fs,
+    onProjectPreflight() {
+      fs.rmSync(managedProject, { recursive: true, force: true });
+      if (!createDirectoryLinkOrSkip(t, externalRoot, managedProject)) return;
+      swapped = true;
+    },
+  };
+
+  try {
+    assert.throws(
+      () => buildSite({ rootDir: tempRoot, projects: completeCatalog(), fs: swappingFs, path }),
+      /invalid project output link|project child changed/,
+    );
+    if (!swapped) return;
+    assert.equal(fs.readFileSync(sentinel, "utf8"), "outside");
+    assert.equal(fs.existsSync(path.join(externalRoot, "index.html")), false);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+    fs.rmSync(externalRoot, { recursive: true, force: true });
+  }
+});
