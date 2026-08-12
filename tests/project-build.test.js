@@ -4,6 +4,8 @@ const path = require("node:path");
 const test = require("node:test");
 
 const {
+  SERVICE_VALUES,
+  TYPE_VALUES,
   validateProjects,
   selectRecommendations,
   renderProjectCard,
@@ -14,17 +16,22 @@ const projects = require("../data/projects.cjs");
 const validProject = {
   slug: "the-dawn",
   title: "The Dawn",
+  titleZh: "黎明",
+  client: "",
+  year: 2026,
   background: "A surreal carnival film.",
   poster: "assets/images/projects-card-01.jpg",
   video: "assets/videos/the-dawn.mp4",
+  sourceUrl: null,
   imageAlt: "A surreal carnival scene",
-  type: "Short film",
-  service: "Online",
+  type: "Short Film",
+  services: ["Online"],
   search: "The Dawn carnival film",
+  featuredOrder: null,
   recommendedProjects: ["space-travel"],
 };
 
-test("validateProjects accepts complete unique records", () => {
+test("validateProjects accepts a complete unique record", () => {
   assert.doesNotThrow(() => validateProjects([validProject]));
 });
 
@@ -37,9 +44,48 @@ test("validateProjects rejects duplicate slugs", () => {
 
 test("validateProjects identifies a missing required field", () => {
   assert.throws(
-    () => validateProjects([{ ...validProject, video: "" }]),
-    /the-dawn: missing video/,
+    () => validateProjects([{ ...validProject, titleZh: "" }]),
+    /the-dawn: missing titleZh/,
   );
+});
+
+test("validateProjects rejects noncanonical or duplicate featured metadata", () => {
+  assert.throws(
+    () => validateProjects([{ ...validProject, services: ["AI-Generated"] }]),
+    /the-dawn: invalid services/,
+  );
+  assert.throws(
+    () => validateProjects([
+      { ...validProject, slug: "a", featuredOrder: 1 },
+      { ...validProject, slug: "b", featuredOrder: 1 },
+    ]),
+    /duplicate featuredOrder/,
+  );
+  assert.throws(
+    () => validateProjects([{ ...validProject, featuredOrder: 11 }]),
+    /the-dawn: invalid featuredOrder/,
+  );
+});
+
+test("catalog contains 23 valid projects and ten ordered features", () => {
+  assert.equal(projects.length, 23);
+  assert.deepEqual(
+    projects.filter((project) => project.featuredOrder != null)
+      .map((project) => project.featuredOrder).sort((a, b) => a - b),
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  );
+  assert.doesNotThrow(() => validateProjects(projects));
+});
+
+test("catalog uses canonical types and service labels", () => {
+  for (const project of projects) {
+    assert.ok(TYPE_VALUES.includes(project.type), project.type);
+    assert.ok(Array.isArray(project.services));
+    assert.ok(project.services.length >= 1 && project.services.length <= 3);
+    assert.equal(new Set(project.services).size, project.services.length);
+    project.services.forEach((service) => assert.ok(SERVICE_VALUES.includes(service), service));
+  }
+  assert.doesNotMatch(JSON.stringify(projects), /AI-Generated|CG&VFX/);
 });
 
 test("recommendations preserve valid explicit order and exclude current project", () => {
@@ -70,7 +116,7 @@ test("recommendations never duplicate a project", () => {
 test("project cards link to independent directory URLs", () => {
   const html = renderProjectCard(validProject);
   assert.match(html, /href="projects\/the-dawn\/"/);
-  assert.match(html, /data-type="Short film"/);
+  assert.match(html, /data-type="Short Film"/);
   assert.match(html, /data-service="Online"/);
   assert.doesNotMatch(html, /href="#"/);
 });
@@ -114,32 +160,14 @@ test("detail-page stylesheet includes responsive player and recommendation rules
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.browse-more-grid/);
 });
 
-test("AUDI project is updated to MICHELIN with automotive recommendations", () => {
-  const project = projects.find((item) => item.slug === "audi");
-  assert.equal(project.title, "MICHELIN");
-  assert.equal(project.poster, "assets/images/michelin-cover.jpg");
-  assert.equal(project.video, "assets/videos/michelin-4k.mp4");
-  assert.equal(project.type, "Automotive");
-  assert.equal(project.recommendedProjects[0], "space-travel");
-  assert.match(project.background, /Summer road trips face slippery rainy roads/);
-});
-
-test("Golden Hour project is updated to SANRIO with Beauty & Fashion recommendations", () => {
-  const project = projects.find((item) => item.slug === "golden-hour");
-  assert.equal(project.title, "SANRIO");
-  assert.equal(project.poster, "assets/images/sanrio-cover.jpg");
-  assert.equal(project.video, "assets/videos/sanrio.mp4");
-  assert.equal(project.type, "Beauty & Fashion");
-  assert.equal(project.recommendedProjects[0], "urban-silence");
-  assert.match(project.background, /Escape city hustle after work/);
-});
-
-test("Urban Silence project is updated to Space Homestead with 3C recommendations", () => {
-  const project = projects.find((item) => item.slug === "urban-silence");
-  assert.equal(project.title, "Space Homestead");
-  assert.equal(project.poster, "assets/images/space-homestead-cover.jpg");
-  assert.equal(project.video, "assets/videos/space-homestead-1080p.mp4");
-  assert.equal(project.type, "3C & Tech");
-  assert.equal(project.recommendedProjects[0], "elf");
-  assert.match(project.background, /our first sci-fi brand film created for Sunseeker Robotics/);
+test("catalog preserves Excel project facts and supplied source URLs", () => {
+  const showreel = projects.find((item) => item.slug === "showreel");
+  const niki = projects.find((item) => item.slug === "huawei-watch-fit-5-niki");
+  assert.equal(showreel.titleZh, "混剪");
+  assert.equal(showreel.featuredOrder, 1);
+  assert.equal(niki.title, "HUAWEI WATCH Fit 5 Niki");
+  assert.equal(niki.featuredOrder, 10);
+  assert.equal(niki.sourceUrl, "https://www.xinpianchang.com/a13700638?from=UserProfile");
+  assert.equal(niki.video, null);
+  assert.equal(niki.poster, "assets/images/project-placeholder.svg");
 });

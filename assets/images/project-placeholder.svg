@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">White Pix project preview</title>
+  <desc id="desc">A restrained White Pix project placeholder.</desc>
+  <rect width="1600" height="900" fill="#f5f3ee"/>
+  <g fill="#111" text-anchor="middle" font-family="Arial, Helvetica, sans-serif">
+    <text x="800" y="435" font-size="88" font-weight="700" letter-spacing="8">WHITE PIX</text>
+    <text x="800" y="500" font-size="22" letter-spacing="5">PROJECT PREVIEW</text>
+  </g>
+</svg>

@@ -1,6 +1,8 @@
+const TYPE_VALUES = ["3C & Tech", "Automotive", "FMCG", "Beauty & Fashion", "Short Film"];
+const SERVICE_VALUES = ["AIGC", "CG & VFX", "2D Animation", "Online"];
 const REQUIRED_FIELDS = [
-  "slug", "title", "background", "poster", "video", "imageAlt",
-  "type", "service", "search", "recommendedProjects",
+  "slug", "title", "titleZh", "background", "poster", "imageAlt",
+  "type", "services", "search", "recommendedProjects",
 ];
 
 function escapeHtml(value) {
@@ -15,6 +17,7 @@ function escapeHtml(value) {
 
 function validateProjects(projects) {
   const slugs = new Set();
+  const featuredOrders = [];
   for (const project of projects) {
     for (const field of REQUIRED_FIELDS) {
       const value = project[field];
@@ -27,6 +30,27 @@ function validateProjects(projects) {
     }
     if (slugs.has(project.slug)) throw new Error(`duplicate slug: ${project.slug}`);
     slugs.add(project.slug);
+
+    if (typeof project.client !== "string") throw new Error(`${project.slug}: invalid client`);
+    if (!Number.isInteger(project.year)) throw new Error(`${project.slug}: invalid year`);
+    if (project.video !== null && typeof project.video !== "string") throw new Error(`${project.slug}: invalid video`);
+    if (project.sourceUrl !== null && typeof project.sourceUrl !== "string") throw new Error(`${project.slug}: invalid sourceUrl`);
+    if (!TYPE_VALUES.includes(project.type)) throw new Error(`${project.slug}: invalid type`);
+    if (!Array.isArray(project.services) || project.services.length < 1 || project.services.length > 3) {
+      throw new Error(`${project.slug}: invalid services`);
+    }
+    if (new Set(project.services).size !== project.services.length || project.services.some((service) => !SERVICE_VALUES.includes(service))) {
+      throw new Error(`${project.slug}: invalid services`);
+    }
+    if (project.featuredOrder !== null) {
+      if (!Number.isInteger(project.featuredOrder) || project.featuredOrder < 1 || project.featuredOrder > 10) {
+        throw new Error(`${project.slug}: invalid featuredOrder`);
+      }
+      featuredOrders.push(project.featuredOrder);
+    }
+  }
+  if (new Set(featuredOrders).size !== featuredOrders.length) {
+    throw new Error("duplicate featuredOrder");
   }
 }
 
@@ -50,7 +74,7 @@ function selectRecommendations(currentSlug, projects, limit = 3) {
 
 function renderProjectCard(project, prefix = "") {
   const href = `${prefix}projects/${escapeHtml(project.slug)}/`;
-  return `      <a class="project-card reveal" href="${href}" data-type="${escapeHtml(project.type)}" data-service="${escapeHtml(project.service)}" data-search="${escapeHtml(project.search)}">
+  return `      <a class="project-card reveal" href="${href}" data-type="${escapeHtml(project.type)}" data-service="${escapeHtml(project.services[0])}" data-search="${escapeHtml(project.search)}">
         <img src="${prefix}${escapeHtml(project.poster)}" alt="${escapeHtml(project.imageAlt)}" loading="lazy">
         <span class="project-title"><span>${escapeHtml(project.title)}</span></span>
         <span class="project-hover">OPEN <span>watch<br>see case</span></span>
@@ -198,6 +222,8 @@ function buildSite({ rootDir, projects, fs, path }) {
 }
 
 module.exports = {
+  SERVICE_VALUES,
+  TYPE_VALUES,
   buildSite,
   escapeHtml,
   renderProjectCard,
