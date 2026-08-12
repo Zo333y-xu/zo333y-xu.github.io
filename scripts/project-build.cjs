@@ -105,8 +105,13 @@ function renderHomePage(projects) {
   <title>White Pix | Creative Post-Production</title>
   <link rel="stylesheet" href="assets/styles.css">
   <script src="assets/site.js" defer></script>
+  <script src="assets/intro-gate.js" defer></script>
 </head>
-<body class="home-page">
+<body class="home-page intro-scroll-lock">
+  <section class="site-intro" data-intro aria-label="Site introduction">
+    <video data-intro-video src="assets/videos/site-intro.mp4" muted autoplay playsinline preload="auto"></video>
+    <button type="button" data-intro-skip>Skip</button>
+  </section>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header site-header--over-image" data-header>
     <a class="brand" href="index.html" aria-label="White Pix home">white pixl</a>
