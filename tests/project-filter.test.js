@@ -24,7 +24,17 @@ test("does not match an unassigned service or unrelated Type", () => {
   assert.equal(matchesProjectFilter(project, "Automotive"), false);
 });
 
+test("does not use project search text for a category filter", () => {
+  const searchableProject = {
+    type: "FMCG",
+    services: ["Online"],
+    search: "AIGC campaign",
+  };
+
+  assert.equal(matchesProjectFilter(searchableProject, "AIGC"), false);
+});
+
 test("matches search text without regard to case", () => {
-  assert.equal(matchesProjectFilter(project, "VOLVO"), true);
-  assert.equal(matchesProjectFilter(project, "unknown"), false);
+  assert.equal(matchesProjectFilter(project, { search: "VOLVO" }), true);
+  assert.equal(matchesProjectFilter(project, { search: "unknown" }), false);
 });

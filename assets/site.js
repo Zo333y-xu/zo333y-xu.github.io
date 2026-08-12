@@ -51,9 +51,8 @@
 
   const matchesProjectFilter = (card, filter) => {
     const services = card.dataset.services.split("|");
-    return card.dataset.type === filter
-      || services.includes(filter)
-      || card.dataset.search.toLowerCase().includes(filter.toLowerCase());
+    if (typeof filter === "string") return card.dataset.type === filter || services.includes(filter);
+    return card.dataset.search.toLowerCase().includes(filter.search.toLowerCase());
   };
 
   const showAllCards = () => {
@@ -96,7 +95,7 @@
   search?.addEventListener("input", () => {
     const query = search.value.trim().toLowerCase();
     cards.forEach((card) => {
-      card.hidden = Boolean(query) && !matchesProjectFilter(card, query);
+      card.hidden = Boolean(query) && !matchesProjectFilter(card, { search: query });
     });
     setStatus(query || "");
   });

@@ -1,7 +1,6 @@
 function matchesProjectFilter({ type, services, search }, filter) {
-  return type === filter
-    || services.includes(filter)
-    || search.toLowerCase().includes(filter.toLowerCase());
+  if (typeof filter === "string") return type === filter || services.includes(filter);
+  return search.toLowerCase().includes(filter.search.toLowerCase());
 }
 
 module.exports = { matchesProjectFilter };
