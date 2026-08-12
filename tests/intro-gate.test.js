@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 
-const { createIntroGate } = require("../assets/intro-gate.js");
+const { createIntroGate, bootstrapIntroGate } = require("../assets/intro-gate.js");
 const { renderHomePage } = require("../scripts/project-build.cjs");
 
 function createElement() {
@@ -31,7 +31,9 @@ function createFixture(overrides = {}) {
       node.removed = true;
     },
   };
+  body.classList.add("intro-scroll-lock");
   video.play = overrides.play || (() => Promise.resolve());
+  video.pause = overrides.pause || (() => {});
 
   return {
     root,
@@ -98,6 +100,18 @@ test("Skip enters home and removes the intro", () => {
   assert.equal(fixture.root.removed, true);
 });
 
+test("finish pauses video safely", () => {
+  let pauses = 0;
+  const fixture = createFixture({ pause: () => { pauses += 1; } });
+  const gate = createIntroGate(fixture);
+
+  gate.start();
+  gate.finish();
+  gate.finish();
+
+  assert.equal(pauses, 1);
+});
+
 test("video loading error enters home", () => {
   const fixture = createFixture();
 
@@ -131,8 +145,10 @@ test("timeout enters home after twelve seconds", () => {
 
 test("an existing session marker bypasses playback", () => {
   let plays = 0;
+  let pauses = 0;
   const fixture = createFixture({
     play: () => { plays += 1; return Promise.resolve(); },
+    pause: () => { pauses += 1; },
     storage: { getItem() { return "true"; }, setItem() {} },
   });
 
@@ -140,13 +156,16 @@ test("an existing session marker bypasses playback", () => {
   finishExit(fixture);
 
   assert.equal(plays, 0);
+  assert.equal(pauses, 1);
   assert.equal(fixture.root.removed, true);
 });
 
 test("reduced motion bypasses playback", () => {
   let plays = 0;
+  let pauses = 0;
   const fixture = createFixture({
     play: () => { plays += 1; return Promise.resolve(); },
+    pause: () => { pauses += 1; },
     mediaQuery: { matches: true },
   });
 
@@ -154,7 +173,17 @@ test("reduced motion bypasses playback", () => {
   finishExit(fixture);
 
   assert.equal(plays, 0);
+  assert.equal(pauses, 1);
   assert.equal(fixture.root.removed, true);
+});
+
+test("premature transitionend cannot remove an active intro", () => {
+  const fixture = createFixture();
+
+  starts(fixture);
+  fixture.root.dispatch("transitionend");
+
+  assert.equal(fixture.root.removed, false);
 });
 
 test("storage exceptions cannot block entering home", () => {
@@ -169,6 +198,40 @@ test("storage exceptions cannot block entering home", () => {
   fixture.skipButton.dispatch("click");
   finishExit(fixture);
 
+  assert.equal(fixture.root.removed, true);
+});
+
+test("bootstrap tolerates a throwing sessionStorage getter", () => {
+  const fixture = createFixture();
+  let sessionStorageReads = 0;
+  const document = {
+    querySelector(selector) {
+      if (selector === "[data-intro]") return fixture.root;
+      return null;
+    },
+  };
+  fixture.root.querySelector = (selector) => {
+    if (selector === "[data-intro-video]") return fixture.video;
+    if (selector === "[data-intro-skip]") return fixture.skipButton;
+    return null;
+  };
+  const window = {
+    document,
+    matchMedia() { return { matches: true }; },
+    get sessionStorage() { sessionStorageReads += 1; throw new Error("denied"); },
+  };
+
+  assert.doesNotThrow(() => bootstrapIntroGate(document, window, {
+    root: fixture.root,
+    video: fixture.video,
+    skipButton: fixture.skipButton,
+    body: fixture.body,
+    setTimer: fixture.setTimer,
+    clearTimer: fixture.clearTimer,
+  }));
+  finishExit(fixture);
+
+  assert.equal(sessionStorageReads, 1);
   assert.equal(fixture.root.removed, true);
 });
 

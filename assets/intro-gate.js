@@ -17,6 +17,14 @@
     else element.classList.delete(name);
   }
 
+  function pauseVideo(video) {
+    try {
+      video?.pause?.();
+    } catch (_) {
+      // A broken media element must not prevent entry to the home page.
+    }
+  }
+
   function createIntroGate(options) {
     const {
       root,
@@ -47,6 +55,7 @@
       finished = true;
       if (timeoutTimer) clearTimer(timeoutTimer);
       timeoutTimer = null;
+      pauseVideo(video);
       try {
         storage?.setItem(SESSION_KEY, "true");
       } catch (_) {
@@ -83,27 +92,52 @@
     }
 
     root?.addEventListener("transitionend", (event) => {
-      if (event.target === root || !event.target) removeRoot(false);
+      if (finished && (event.target === root || !event.target)) removeRoot(false);
     });
     skipButton?.addEventListener("click", finish);
 
     return { start, finish };
   }
 
-  if (typeof module !== "undefined" && module.exports) module.exports = { createIntroGate };
+  function getSessionStorage(windowRef) {
+    try {
+      return windowRef.sessionStorage;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function getReducedMotionQuery(windowRef) {
+    try {
+      return windowRef.matchMedia("(prefers-reduced-motion: reduce)");
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function bootstrapIntroGate(documentRef, windowRef, options = {}) {
+    const root = documentRef?.querySelector("[data-intro]");
+    if (!root) return null;
+    const gate = createIntroGate({
+      root,
+      video: root.querySelector("[data-intro-video]"),
+      skipButton: root.querySelector("[data-intro-skip]"),
+      body: documentRef.body,
+      storage: getSessionStorage(windowRef),
+      mediaQuery: getReducedMotionQuery(windowRef),
+      ...options,
+    });
+    gate.start();
+    return gate;
+  }
+
+  if (typeof module !== "undefined" && module.exports) module.exports = { bootstrapIntroGate, createIntroGate };
 
   if (globalScope.document) {
-    globalScope.document.addEventListener("DOMContentLoaded", () => {
-      const root = globalScope.document.querySelector("[data-intro]");
-      if (!root) return;
-      createIntroGate({
-        root,
-        video: root.querySelector("[data-intro-video]"),
-        skipButton: root.querySelector("[data-intro-skip]"),
-        body: globalScope.document.body,
-        storage: globalScope.sessionStorage,
-        mediaQuery: globalScope.matchMedia("(prefers-reduced-motion: reduce)"),
-      }).start();
-    });
+    if (!bootstrapIntroGate(globalScope.document, globalScope)) {
+      globalScope.document.addEventListener("DOMContentLoaded", () => {
+        bootstrapIntroGate(globalScope.document, globalScope);
+      }, { once: true });
+    }
   }
 }(typeof window !== "undefined" ? window : globalThis));
