@@ -79,6 +79,54 @@ function selectRecommendations(currentSlug, projects, limit = 3) {
   return selected;
 }
 
+function selectFeaturedProjects(projects) {
+  return projects
+    .filter((project) => project.featuredOrder !== null)
+    .sort((first, second) => first.featuredOrder - second.featuredOrder);
+}
+
+function renderHomeProject(project, options = {}) {
+  const loading = options.lazy ? ' loading="lazy"' : "";
+  return `    <a class="work-panel reveal" href="projects/${escapeHtml(project.slug)}/" aria-label="${escapeHtml(project.title)}">
+      <img src="${escapeHtml(project.poster)}" alt="${escapeHtml(project.imageAlt)}"${loading}>
+    </a>`;
+}
+
+function renderHomePage(projects) {
+  const panels = selectFeaturedProjects(projects)
+    .map((project, index) => renderHomeProject(project, { lazy: index > 0 }))
+    .join("\n");
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="White Pix creative post-production studio.">
+  <title>White Pix | Creative Post-Production</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script src="assets/site.js" defer></script>
+</head>
+<body class="home-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header site-header--over-image" data-header>
+    <a class="brand" href="index.html" aria-label="White Pix home">white pixl</a>
+    <nav class="primary-nav" aria-label="Primary navigation">
+      <a href="projects.html">Projects</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <button class="language-button" type="button" aria-label="Current language: English">En</button>
+    </nav>
+  </header>
+
+  <main id="main" class="home-projects">
+${panels}
+  </main>
+
+  ${renderFooter()}
+</body>
+</html>`;
+}
+
 function renderProjectCard(project, prefix = "") {
   const href = `${prefix}projects/${escapeHtml(project.slug)}/`;
   return `      <a class="project-card reveal" href="${href}" data-type="${escapeHtml(project.type)}" data-service="${escapeHtml(project.services[0])}" data-search="${escapeHtml(project.search)}">
@@ -215,6 +263,7 @@ ${recommendedCards}
 
 function buildSite({ rootDir, projects, fs, path }) {
   validateProjects(projects);
+  fs.writeFileSync(path.join(rootDir, "index.html"), renderHomePage(projects));
   fs.writeFileSync(path.join(rootDir, "projects.html"), renderProjectsPage(projects));
   for (const project of projects) {
     const outputDirectory = path.resolve(rootDir, "projects", project.slug);
@@ -235,7 +284,10 @@ module.exports = {
   escapeHtml,
   renderProjectCard,
   renderProjectDetail,
+  renderHomePage,
+  renderHomeProject,
   renderProjectsPage,
+  selectFeaturedProjects,
   selectRecommendations,
   validateProjects,
 };

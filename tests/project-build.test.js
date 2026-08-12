@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
+const os = require("node:os");
 
 const {
   SERVICE_VALUES,
@@ -10,6 +11,10 @@ const {
   selectRecommendations,
   renderProjectCard,
   renderProjectDetail,
+  renderHomePage,
+  renderHomeProject,
+  selectFeaturedProjects,
+  buildSite,
 } = require("../scripts/project-build.cjs");
 const projects = require("../data/projects.cjs");
 
@@ -193,4 +198,63 @@ test("catalog preserves Excel project facts and supplied source URLs", () => {
   assert.equal(niki.sourceUrl, "https://www.xinpianchang.com/a13700638?from=UserProfile");
   assert.equal(niki.video, null);
   assert.equal(niki.poster, "assets/images/project-placeholder.svg");
+});
+
+test("featured home projects are exactly the ten catalog entries sorted by featuredOrder", () => {
+  const featured = selectFeaturedProjects([
+    { ...validProject, slug: "third", featuredOrder: 3 },
+    { ...validProject, slug: "unfeatured", featuredOrder: null },
+    { ...validProject, slug: "first", featuredOrder: 1 },
+    { ...validProject, slug: "second", featuredOrder: 2 },
+  ]);
+
+  assert.deepEqual(featured.map((project) => project.slug), ["first", "second", "third"]);
+});
+
+test("home project panel uses direct detail links, project poster and image alt text", () => {
+  const html = renderHomeProject({
+    ...validProject,
+    slug: "huawei-freebuds-pro-3",
+    poster: "assets/images/project-placeholder.svg",
+    imageAlt: "Floating earbuds in a silver case",
+  }, { lazy: true });
+
+  assert.match(html, /class="work-panel reveal"/);
+  assert.match(html, /href="projects\/huawei-freebuds-pro-3\/"/);
+  assert.match(html, /src="assets\/images\/project-placeholder\.svg"/);
+  assert.match(html, /alt="Floating earbuds in a silver case"/);
+  assert.match(html, /loading="lazy"/);
+  assert.doesNotMatch(html, /href="projects\.html"/);
+});
+
+test("home page renders the first featured image eagerly and remaining panels lazily", () => {
+  const html = renderHomePage(completeCatalog().reverse());
+  const panels = [...html.matchAll(/<a class="work-panel reveal"[\s\S]*?<\/a>/g)];
+
+  assert.equal(panels.length, 10);
+  assert.match(panels[0][0], /href="projects\/project-1\/"/);
+  assert.doesNotMatch(panels[0][0], /loading="lazy"/);
+  for (const panel of panels.slice(1)) assert.match(panel[0], /loading="lazy"/);
+});
+
+test("buildSite writes the generated home page before projects and detail pages", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const writes = [];
+  const trackingFs = {
+    ...fs,
+    writeFileSync(file, content) {
+      writes.push(path.relative(tempRoot, file));
+      return fs.writeFileSync(file, content);
+    },
+  };
+
+  try {
+    buildSite({ rootDir: tempRoot, projects: completeCatalog(), fs: trackingFs, path });
+    assert.equal(writes[0], "index.html");
+    assert.equal(writes[1], "projects.html");
+    const home = fs.readFileSync(path.join(tempRoot, "index.html"), "utf8");
+    assert.equal((home.match(/class="work-panel reveal"/g) || []).length, 10);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
 });

@@ -32,7 +32,12 @@ assert.match(
   "Home navigation must use the header's vertically centered flex alignment.",
 );
 
-assert.match(home, /src="assets\/images\/home-project-01\.jpg"/);
+const workPanels = [...home.matchAll(/<a class="work-panel reveal" href="([^"]+)"[^>]*>\s*<img src="([^"]+)" alt="([^"]+)"([^>]*)>/g)];
+assert.equal(workPanels.length, 10, "Home page must render ten featured project panels.");
+for (const [, href] of workPanels) {
+  assert.match(href, /^projects\/[a-z0-9]+(?:-[a-z0-9]+)*\/$/);
+}
+assert.doesNotMatch(home, /home-project-02\.jpg/);
 
 assert.doesNotMatch(home, /class="home-project-title"/);
 assert.doesNotMatch(css, /\.home-project-title/);
