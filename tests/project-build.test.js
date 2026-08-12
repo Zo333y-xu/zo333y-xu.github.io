@@ -11,6 +11,7 @@ const {
   selectRecommendations,
   renderProjectCard,
   renderProjectDetail,
+  renderProjectMedia,
   renderHomePage,
   renderHomeProject,
   renderProjectsPage,
@@ -159,6 +160,51 @@ test("projects page lists canonical service filters in display order", () => {
 
   assert.deepEqual(labels, ["AIGC", "CG &amp; VFX", "2D Animation", "Online"]);
   assert.doesNotMatch(html, /AI-Generated|CG&amp;VFX/);
+});
+
+test("missing-video detail page renders a safe poster fallback", () => {
+  const html = renderProjectDetail({ ...validProject, video: null, sourceUrl: "https://example.com/watch" }, []);
+
+  assert.match(html, /class="project-player project-player--fallback"/);
+  assert.match(html, /<img src="\.\.\/\.\.\/assets\/images\/projects-card-01\.jpg" alt="A surreal carnival scene">/);
+  assert.match(html, />Video coming soon</);
+  assert.doesNotMatch(html, /<video|data-video-src|src=""/);
+});
+
+test("missing-video media escapes and secures an optional source link", () => {
+  const html = renderProjectMedia({
+    ...validProject,
+    video: null,
+    sourceUrl: "https://example.com/watch?title=The%20Dawn&from=portfolio",
+  });
+
+  assert.match(html, /href="https:\/\/example\.com\/watch\?title=The%20Dawn&amp;from=portfolio"/);
+  assert.match(html, /target="_blank"/);
+  assert.match(html, /rel="noopener noreferrer"/);
+  assert.doesNotMatch(html, /<iframe|<embed|<object/);
+});
+
+test("missing-video media omits the source link when no source URL exists", () => {
+  const html = renderProjectMedia({ ...validProject, video: null, sourceUrl: null });
+
+  assert.match(html, />Video coming soon</);
+  assert.doesNotMatch(html, /<a\s/);
+});
+
+test("real-video media retains the lazy player script contract", () => {
+  const html = renderProjectMedia(validProject);
+
+  for (const attribute of [
+    "data-project-player",
+    "data-video-src=\"../../assets/videos/the-dawn.mp4\"",
+    "data-play-project",
+    "data-video-error",
+    "data-video-retry",
+  ]) assert.match(html, new RegExp(attribute));
+  assert.match(html, /<video[^>]*poster="\.\.\/\.\.\/assets\/images\/projects-card-01\.jpg"/);
+  assert.match(html, /preload="metadata"/);
+  assert.match(html, /playsinline/);
+  assert.match(html, /aria-label="Play The Dawn"/);
 });
 
 test("detail page contains accessible lazy MP4 player and project content", () => {

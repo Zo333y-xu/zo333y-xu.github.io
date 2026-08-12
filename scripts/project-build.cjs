@@ -211,6 +211,27 @@ function renderRecommendation(project) {
       </a>`;
 }
 
+function renderProjectMedia(project) {
+  if (project.video !== null) {
+    return `    <section class="project-player" data-project-player>
+      <video poster="../../${escapeHtml(project.poster)}" data-video-src="../../${escapeHtml(project.video)}" preload="metadata" playsinline controls aria-label="${escapeHtml(project.title)} video"></video>
+      <button class="project-play-button" type="button" data-play-project aria-label="Play ${escapeHtml(project.title)}"><span aria-hidden="true"></span></button>
+      <div class="project-video-error" data-video-error role="alert" hidden>Video could not be loaded. <button type="button" data-video-retry>Try again</button></div>
+    </section>`;
+  }
+
+  const sourceLink = project.sourceUrl === null
+    ? ""
+    : `\n        <a class="project-source-link" href="${escapeHtml(project.sourceUrl)}" target="_blank" rel="noopener noreferrer">View source</a>`;
+
+  return `    <section class="project-player project-player--fallback">
+      <img src="../../${escapeHtml(project.poster)}" alt="${escapeHtml(project.imageAlt)}">
+      <div class="project-player-fallback-content">
+        <p>Video coming soon</p>${sourceLink}
+      </div>
+    </section>`;
+}
+
 function renderProjectDetail(project, recommendations) {
   const recommendedCards = recommendations.map(renderRecommendation).join("\n");
   return `<!doctype html>
@@ -239,11 +260,7 @@ function renderProjectDetail(project, recommendations) {
     <section class="project-intro">
       <h1>${escapeHtml(project.title)}</h1>
     </section>
-    <section class="project-player" data-project-player>
-      <video poster="../../${escapeHtml(project.poster)}" data-video-src="../../${escapeHtml(project.video)}" preload="metadata" playsinline controls aria-label="${escapeHtml(project.title)} video"></video>
-      <button class="project-play-button" type="button" data-play-project aria-label="Play ${escapeHtml(project.title)}"><span aria-hidden="true"></span></button>
-      <div class="project-video-error" data-video-error role="alert" hidden>Video could not be loaded. <button type="button" data-video-retry>Try again</button></div>
-    </section>
+${renderProjectMedia(project)}
     <section class="project-background">
       <h2>Background</h2>
       <p>${escapeHtml(project.background)}</p>
@@ -283,6 +300,7 @@ module.exports = {
   escapeHtml,
   renderProjectCard,
   renderProjectDetail,
+  renderProjectMedia,
   renderHomePage,
   renderHomeProject,
   renderProjectsPage,

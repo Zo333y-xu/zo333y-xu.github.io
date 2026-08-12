@@ -725,6 +725,11 @@ button { color: inherit; }
 .project-intro h1 { max-width: 1100px; margin: 0 auto; font-size: clamp(46px, 6vw, 104px); font-weight: 400; letter-spacing: -.06em; line-height: .95; }
 .project-player { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: var(--black); }
 .project-player video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.project-player--fallback > img { display: block; width: 100%; height: 100%; object-fit: cover; filter: brightness(.42); }
+.project-player-fallback-content { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 16px; padding: 24px; color: var(--white); text-align: center; }
+.project-player-fallback-content p { margin: 0; font-size: clamp(20px, 2.4vw, 36px); font-weight: 700; letter-spacing: -.03em; }
+.project-source-link { padding: 9px 13px; border: 1px solid currentColor; color: inherit; font-size: 13px; font-weight: 700; text-decoration: none; transition: background 180ms ease, color 180ms ease; }
+.project-source-link:hover, .project-source-link:focus-visible { color: var(--black); background: var(--white); }
 .project-play-button { position: absolute; top: 50%; left: 50%; display: grid; width: clamp(64px, 9vw, 132px); aspect-ratio: 1; place-items: center; border: 0; border-radius: 50%; color: var(--white); background: rgb(255 255 255 / .6); cursor: pointer; transform: translate(-50%, -50%); transition: transform 180ms ease, background 180ms ease; }
 .project-play-button span { width: 0; height: 0; margin-left: 8%; border-top: 18px solid transparent; border-bottom: 18px solid transparent; border-left: 26px solid currentColor; }
 .project-play-button:hover, .project-play-button:focus-visible { background: rgb(255 255 255 / .85); transform: translate(-50%, -50%) scale(1.06); }
@@ -741,12 +746,13 @@ button { color: inherit; }
 .browse-more-card img { aspect-ratio: 1.5 / 1; object-fit: cover; transition: transform .45s cubic-bezier(.2,.7,.2,1), filter .3s ease; }
 .browse-more-card span { display: block; padding: 12px 0; font-size: 14px; font-weight: 700; }
 .browse-more-card:hover img, .browse-more-card:focus-visible img { filter: brightness(.84); transform: scale(1.025); }
-.project-play-button:focus-visible, .browse-more-card:focus-visible, .project-video-error button:focus-visible { outline: 2px solid var(--black); outline-offset: 4px; }
+.project-play-button:focus-visible, .browse-more-card:focus-visible, .project-video-error button:focus-visible, .project-source-link:focus-visible { outline: 2px solid var(--black); outline-offset: 4px; }
 
 @media (max-width: 760px) {
   .detail-header { height: 58px; }
   .project-intro { padding: 64px 16px 58px; }
   .project-player { aspect-ratio: 16 / 10; }
+  .project-player-fallback-content { gap: 12px; padding: 20px; }
   .project-play-button span { border-top-width: 12px; border-bottom-width: 12px; border-left-width: 18px; }
   .project-background { grid-template-columns: 1fr; gap: 14px; width: auto; margin: 0 20px; padding: 56px 0 100px; }
   .project-background p { font-size: 16px; line-height: 1.3; }
