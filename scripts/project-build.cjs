@@ -15,6 +15,15 @@ function escapeHtml(value) {
   }[character]));
 }
 
+function isHttpsUrl(value) {
+  if (typeof value !== "string" || value.trim() !== value || value === "") return false;
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function validateProjects(projects) {
   const slugs = new Set();
   const featuredOrders = [];
@@ -36,7 +45,7 @@ function validateProjects(projects) {
     if (project.video !== null && (typeof project.video !== "string" || project.video.trim() === "")) {
       throw new Error(`${project.slug}: invalid video`);
     }
-    if (project.sourceUrl !== null && (typeof project.sourceUrl !== "string" || project.sourceUrl.trim() === "")) {
+    if (project.sourceUrl !== null && !isHttpsUrl(project.sourceUrl)) {
       throw new Error(`${project.slug}: invalid sourceUrl`);
     }
     if (!TYPE_VALUES.includes(project.type)) throw new Error(`${project.slug}: invalid type`);
@@ -220,7 +229,7 @@ function renderProjectMedia(project) {
     </section>`;
   }
 
-  const sourceLink = project.sourceUrl === null
+  const sourceLink = !isHttpsUrl(project.sourceUrl)
     ? ""
     : `\n        <a class="project-source-link" href="${escapeHtml(project.sourceUrl)}" target="_blank" rel="noopener noreferrer">View source</a>`;
 
@@ -279,11 +288,24 @@ ${recommendedCards}
 
 function buildSite({ rootDir, projects, fs, path }) {
   validateProjects(projects);
+  const projectRoot = path.resolve(rootDir, "projects");
+  const projectSlugs = new Set(projects.map((project) => project.slug));
+  if (fs.existsSync(projectRoot)) {
+    for (const entry of fs.readdirSync(projectRoot, { withFileTypes: true })) {
+      if (!entry.isDirectory() || projectSlugs.has(entry.name)) continue;
+
+      const staleDirectory = path.resolve(projectRoot, entry.name);
+      const relativePath = path.relative(projectRoot, staleDirectory);
+      if (relativePath === "" || relativePath === ".." || relativePath.startsWith(`..${path.sep}`) || path.isAbsolute(relativePath)) {
+        throw new Error(`invalid stale project output path: ${entry.name}`);
+      }
+      fs.rmSync(staleDirectory, { recursive: true, force: false });
+    }
+  }
   fs.writeFileSync(path.join(rootDir, "index.html"), renderHomePage(projects));
   fs.writeFileSync(path.join(rootDir, "projects.html"), renderProjectsPage(projects));
   for (const project of projects) {
     const outputDirectory = path.resolve(rootDir, "projects", project.slug);
-    const projectRoot = path.resolve(rootDir, "projects");
     if (!outputDirectory.startsWith(`${projectRoot}${path.sep}`)) {
       throw new Error(`invalid project output path: ${project.slug}`);
     }

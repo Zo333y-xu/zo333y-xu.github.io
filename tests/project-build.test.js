@@ -87,14 +87,26 @@ test("validateProjects rejects noncanonical or duplicate featured metadata", () 
   );
 });
 
-test("validateProjects only accepts null or non-empty media source strings", () => {
-  for (const [field, value] of [["video", ""], ["video", 1], ["sourceUrl", ""], ["sourceUrl", {}]]) {
+test("validateProjects only accepts null or non-empty video strings", () => {
+  for (const [field, value] of [["video", ""], ["video", 1]]) {
     assert.throws(
       () => validateProjects([{ ...validProject, [field]: value }]),
       new RegExp(`the-dawn: invalid ${field}`),
     );
   }
   assert.doesNotThrow(() => validateProjects(completeCatalog({ video: null, sourceUrl: null })));
+});
+
+test("validateProjects accepts only null or valid HTTPS source URLs", () => {
+  assert.doesNotThrow(() => validateProjects(completeCatalog({ sourceUrl: "https://example.com/watch?campaign=summer" })));
+  assert.doesNotThrow(() => validateProjects(completeCatalog({ sourceUrl: null })));
+
+  for (const sourceUrl of ["javascript:alert(1)", "http://example.com", "not a URL", "", 1, {}]) {
+    assert.throws(
+      () => validateProjects(completeCatalog({ sourceUrl })),
+      /project-1: invalid sourceUrl/,
+    );
+  }
 });
 
 test("catalog contains 23 valid projects and ten ordered features", () => {
@@ -189,6 +201,13 @@ test("missing-video media omits the source link when no source URL exists", () =
 
   assert.match(html, />Video coming soon</);
   assert.doesNotMatch(html, /<a\s/);
+});
+
+test("missing-video media does not render a dangerous source URL", () => {
+  const html = renderProjectMedia({ ...validProject, video: null, sourceUrl: "javascript:alert(1)" });
+
+  assert.doesNotMatch(html, /<a\s/);
+  assert.doesNotMatch(html, /javascript:/i);
 });
 
 test("real-video media retains the lazy player script contract", () => {
@@ -312,6 +331,32 @@ test("buildSite writes the generated home page before projects and detail pages"
     assert.equal(writes[1], "projects.html");
     const home = fs.readFileSync(path.join(tempRoot, "index.html"), "utf8");
     assert.equal((home.match(/class="work-panel reveal"/g) || []).length, 10);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test("buildSite prunes stale project directories without touching files outside projects", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const staleDirectory = path.join(tempRoot, "projects", "stale-project");
+  const outsideFile = path.join(tempRoot, "keep-me.txt");
+
+  fs.mkdirSync(staleDirectory, { recursive: true });
+  fs.writeFileSync(path.join(staleDirectory, "index.html"), "stale");
+  fs.writeFileSync(outsideFile, "keep");
+
+  try {
+    buildSite({ rootDir: tempRoot, projects: completeCatalog(), fs, path });
+
+    assert.equal(fs.existsSync(staleDirectory), false);
+    assert.equal(fs.readFileSync(outsideFile, "utf8"), "keep");
+    assert.deepEqual(
+      fs.readdirSync(path.join(tempRoot, "projects"), { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => entry.name)
+        .sort(),
+      completeCatalog().map((project) => project.slug).sort(),
+    );
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
