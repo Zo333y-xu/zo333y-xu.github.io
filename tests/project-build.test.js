@@ -361,3 +361,62 @@ test("buildSite prunes stale project directories without touching files outside 
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
 });
+
+function createDirectoryLinkOrSkip(t, target, link) {
+  try {
+    fs.symlinkSync(target, link, process.platform === "win32" ? "junction" : "dir");
+  } catch (error) {
+    if (error.code === "EPERM" || error.code === "EACCES" || error.code === "ENOTSUP") {
+      t.skip(`directory links unavailable: ${error.code}`);
+      return false;
+    }
+    throw error;
+  }
+  return true;
+}
+
+test("buildSite rejects a linked project root without touching its external target", (t) => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-external-"));
+  const projectRoot = path.join(tempRoot, "projects");
+  const sentinel = path.join(externalRoot, "sentinel.txt");
+  fs.writeFileSync(sentinel, "outside");
+
+  try {
+    if (!createDirectoryLinkOrSkip(t, externalRoot, projectRoot)) return;
+
+    assert.throws(
+      () => buildSite({ rootDir: tempRoot, projects: completeCatalog(), fs, path }),
+      /invalid project root/,
+    );
+    assert.equal(fs.readFileSync(sentinel, "utf8"), "outside");
+    assert.equal(fs.existsSync(path.join(externalRoot, "project-1")), false);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+    fs.rmSync(externalRoot, { recursive: true, force: true });
+  }
+});
+
+test("buildSite rejects linked project children without touching their external target", (t) => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-build-"));
+  const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), "white-pix-external-"));
+  const projectRoot = path.join(tempRoot, "projects");
+  const linkedChild = path.join(projectRoot, "stale-project");
+  const sentinel = path.join(externalRoot, "sentinel.txt");
+  fs.mkdirSync(projectRoot, { recursive: true });
+  fs.writeFileSync(sentinel, "outside");
+
+  try {
+    if (!createDirectoryLinkOrSkip(t, externalRoot, linkedChild)) return;
+
+    assert.throws(
+      () => buildSite({ rootDir: tempRoot, projects: completeCatalog(), fs, path }),
+      /invalid project output link/,
+    );
+    assert.equal(fs.readFileSync(sentinel, "utf8"), "outside");
+    assert.equal(fs.existsSync(path.join(externalRoot, "index.html")), false);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+    fs.rmSync(externalRoot, { recursive: true, force: true });
+  }
+});

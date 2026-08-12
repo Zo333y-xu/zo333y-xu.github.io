@@ -24,6 +24,11 @@ function isHttpsUrl(value) {
   }
 }
 
+function isResolvedChildPath(parentPath, childPath, path) {
+  const relativePath = path.relative(parentPath, childPath);
+  return relativePath !== "" && relativePath !== ".." && !relativePath.startsWith(`..${path.sep}`) && !path.isAbsolute(relativePath);
+}
+
 function validateProjects(projects) {
   const slugs = new Set();
   const featuredOrders = [];
@@ -290,13 +295,42 @@ function buildSite({ rootDir, projects, fs, path }) {
   validateProjects(projects);
   const projectRoot = path.resolve(rootDir, "projects");
   const projectSlugs = new Set(projects.map((project) => project.slug));
-  if (fs.existsSync(projectRoot)) {
-    for (const entry of fs.readdirSync(projectRoot, { withFileTypes: true })) {
+  let projectRootStats;
+  try {
+    projectRootStats = fs.lstatSync(projectRoot);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+
+  if (projectRootStats) {
+    if (!projectRootStats.isDirectory() || projectRootStats.isSymbolicLink()) {
+      throw new Error("invalid project root");
+    }
+
+    const canonicalProjectRoot = fs.realpathSync(projectRoot);
+    const expectedProjectRoot = path.resolve(fs.realpathSync(path.resolve(rootDir)), "projects");
+    if (path.relative(expectedProjectRoot, canonicalProjectRoot) !== "") {
+      throw new Error("invalid project root");
+    }
+
+    const projectEntries = fs.readdirSync(projectRoot, { withFileTypes: true });
+    for (const entry of projectEntries) {
+      const projectPath = path.resolve(projectRoot, entry.name);
+      const projectStats = fs.lstatSync(projectPath);
+      if (projectStats.isSymbolicLink()) {
+        throw new Error(`invalid project output link: ${entry.name}`);
+      }
+      const canonicalProjectPath = fs.realpathSync(projectPath);
+      if (!isResolvedChildPath(canonicalProjectRoot, canonicalProjectPath, path)) {
+        throw new Error(`invalid project output link: ${entry.name}`);
+      }
+    }
+
+    for (const entry of projectEntries) {
       if (!entry.isDirectory() || projectSlugs.has(entry.name)) continue;
 
       const staleDirectory = path.resolve(projectRoot, entry.name);
-      const relativePath = path.relative(projectRoot, staleDirectory);
-      if (relativePath === "" || relativePath === ".." || relativePath.startsWith(`..${path.sep}`) || path.isAbsolute(relativePath)) {
+      if (!isResolvedChildPath(projectRoot, staleDirectory, path)) {
         throw new Error(`invalid stale project output path: ${entry.name}`);
       }
       fs.rmSync(staleDirectory, { recursive: true, force: false });
@@ -306,7 +340,7 @@ function buildSite({ rootDir, projects, fs, path }) {
   fs.writeFileSync(path.join(rootDir, "projects.html"), renderProjectsPage(projects));
   for (const project of projects) {
     const outputDirectory = path.resolve(rootDir, "projects", project.slug);
-    if (!outputDirectory.startsWith(`${projectRoot}${path.sep}`)) {
+    if (!isResolvedChildPath(projectRoot, outputDirectory, path)) {
       throw new Error(`invalid project output path: ${project.slug}`);
     }
     fs.mkdirSync(outputDirectory, { recursive: true });
