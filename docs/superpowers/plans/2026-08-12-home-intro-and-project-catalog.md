@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a session-once intro animation and generate the home page, Projects page, and 24 project detail pages from one validated catalog, with safe placeholder media fallbacks.
+**Goal:** Build a session-once intro animation and generate the home page, Projects page, and 23 project detail pages from one validated catalog, with safe placeholder media fallbacks.
 
 **Architecture:** Extend `data/projects.cjs` into the single project catalog and keep `scripts/project-build.cjs` as a pure static HTML renderer plus filesystem build orchestrator. Put intro lifecycle behavior in a small testable CommonJS module that also initializes itself in the browser, while `assets/site.js` retains reveal and filtering behavior. Generate all site pages at build time so local-file use and SEO remain intact.
 
@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- The catalog must contain exactly 24 projects and exactly 10 unique `featuredOrder` values covering integers 1 through 10.
+- The catalog must contain exactly 23 projects (Excel rows 2–24; row 1 is the separate intro) and exactly 10 unique `featuredOrder` values covering integers 1 through 10.
 - The intro source is `D:/xwechat_files/wxid_mo3c9nf8jys422_6f51/msg/video/2026-08/b891f7949b42d0d7c7d76e621006ce1c.mp4` and the published destination is `assets/videos/site-intro.mp4`.
 - Service labels are exactly `AIGC`, `CG & VFX`, `2D Animation`, and `Online`, in that display order.
 - Type labels are exactly `3C & Tech`, `Automotive`, `FMCG`, `Beauty & Fashion`, and `Short Film`.
@@ -20,7 +20,7 @@
 
 ---
 
-### Task 1: Catalog schema and 24 project records
+### Task 1: Catalog schema and 23 project records
 
 **Files:**
 - Modify: `tests/project-build.test.js`
@@ -34,11 +34,11 @@
 
 - [ ] **Step 1: Write failing catalog validation tests**
 
-Add tests that assert the actual catalog has 24 records, uses unique slugs, contains exactly ten `featuredOrder` values `1..10`, uses only approved Type and Service values, stores `services` as a non-empty array of at most three unique values, and contains no legacy strings:
+Add tests that assert the actual catalog has 23 records, uses unique slugs, contains exactly ten `featuredOrder` values `1..10`, uses only approved Type and Service values, stores `services` as a non-empty array of at most three unique values, and contains no legacy strings:
 
 ```js
-test("catalog contains 24 valid projects and ten ordered features", () => {
-  assert.equal(projects.length, 24);
+test("catalog contains 23 valid projects and ten ordered features", () => {
+  assert.equal(projects.length, 23);
   assert.deepEqual(
     projects.filter((project) => project.featuredOrder != null)
       .map((project) => project.featuredOrder).sort((a, b) => a - b),
@@ -80,9 +80,9 @@ const SERVICE_VALUES = ["AIGC", "CG & VFX", "2D Animation", "Online"];
 
 Treat `client`, `video`, `sourceUrl`, and `featuredOrder` as explicitly nullable/empty-capable fields; require every other schema field.
 
-- [ ] **Step 4: Populate all 24 project records**
+- [ ] **Step 4: Populate all 23 project records**
 
-Translate Excel rows 2–24 into 24 catalog records. Exclude the intro animation row from the project count. Map the showreel to `featuredOrder: 1`, preserve rows 3–10 in order, and assign `HUAWEI WATCH Fit 5 Niki` to `featuredOrder: 10`. Use the placeholder SVG and `video: null` whenever no verified local asset exists.
+Translate Excel rows 2–24 into 23 catalog records. Exclude the intro animation row from the project count. Map the showreel to `featuredOrder: 1`, preserve rows 3–10 in order, and assign `HUAWEI WATCH Fit 5 Niki` to `featuredOrder: 10`. Use the placeholder SVG and `video: null` whenever no verified local asset exists.
 
 - [ ] **Step 5: Create the local placeholder SVG**
 
@@ -379,7 +379,7 @@ node scripts/build.cjs
 node --test tests/project-build.test.js
 ```
 
-Expected: all 24 detail directories contain generated `index.html`; no missing-video page contains an empty video source.
+Expected: all 23 detail directories contain generated `index.html`; no missing-video page contains an empty video source.
 
 - [ ] **Step 6: Commit media fallback**
 
@@ -434,7 +434,7 @@ Expected: clean build and all tests pass with no warnings or failures.
 
 - [ ] **Step 6: Scan generated references**
 
-Run a PowerShell validation that extracts local `src`, `poster`, and `data-video-src` paths from generated HTML, resolves them under the repository, and fails if any referenced local file is missing. Explicitly assert 24 generated detail pages and 10 home work panels.
+Run a PowerShell validation that extracts local `src`, `poster`, and `data-video-src` paths from generated HTML, resolves them under the repository, and fails if any referenced local file is missing. Explicitly assert 23 generated detail pages and 10 home work panels.
 
 - [ ] **Step 7: Perform visual verification**
 
