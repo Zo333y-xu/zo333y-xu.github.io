@@ -9,6 +9,8 @@ const projectsPage = fs.readFileSync(path.join(root, "projects.html"), "utf8");
 const placeholderSvg = fs.readFileSync(path.join(root, "assets", "images", "project-placeholder.svg"), "utf8");
 const catalog = require("../data/projects.cjs");
 const placeholderPath = "assets/images/project-placeholder.svg";
+const homeLogoPath = path.join(root, "assets", "images", "white-pix-logo-white.png");
+const lightPageLogoPath = path.join(root, "assets", "images", "white-pix-logo-dark.png");
 
 function cssRule(selector) {
   const start = css.indexOf(selector);
@@ -43,6 +45,21 @@ assert.match(
   /\.site-header--over-image \.brand\s*\{[\s\S]*?top:\s*50%;[\s\S]*?left:\s*50%;[\s\S]*?background:\s*url\("images\/white-pix-logo-white\.png"\)/,
   "The standalone home logo must be centered in the header.",
 );
+
+assert.match(
+  css,
+  /\.site-header--light \.brand\s*\{[\s\S]*?background:\s*url\("images\/white-pix-logo-dark\.png"\)/,
+  "Light project pages must use the dark transparent logo.",
+);
+
+for (const [label, logoPath] of [["home", homeLogoPath], ["light page", lightPageLogoPath]]) {
+  assert.equal(fs.existsSync(logoPath), true, `The ${label} logo asset must exist.`);
+  assert.deepEqual(
+    [...fs.readFileSync(logoPath).subarray(0, 8)],
+    [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+    `The ${label} logo must be a PNG with transparency support.`,
+  );
+}
 
 assert.doesNotMatch(
   css,

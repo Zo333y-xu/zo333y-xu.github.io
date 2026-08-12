@@ -149,7 +149,7 @@ button { color: inherit; }
   height: 58px;
   overflow: hidden;
   color: transparent;
-  background: url("images/white-pix-logo.jpg") center / contain no-repeat;
+  background: url("images/white-pix-logo-dark.png") center / contain no-repeat;
 }
 
 .brand {
