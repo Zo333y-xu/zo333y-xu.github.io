@@ -110,13 +110,36 @@ function selectRecommendations(currentSlug, projects, limit = 3) {
   if (!current) throw new Error(`unknown project: ${currentSlug}`);
 
   const bySlug = new Map(projects.map((project) => [project.slug, project]));
+  const currentIndex = projects.indexOf(current);
   const selected = [];
   const seen = new Set([currentSlug]);
 
-  for (const slug of [...current.recommendedProjects, ...projects.map((project) => project.slug)]) {
+  for (const slug of current.recommendedProjects) {
     if (seen.has(slug) || !bySlug.has(slug)) continue;
     seen.add(slug);
     selected.push(bySlug.get(slug));
+    if (selected.length === limit) break;
+  }
+
+  const ranked = projects
+    .map((project, index) => ({
+      project,
+      index,
+      sameType: project.type === current.type ? 1 : 0,
+      sharedServices: project.services.filter((service) => current.services.includes(service)).length,
+      distance: Math.abs(index - currentIndex),
+    }))
+    .filter(({ project }) => !seen.has(project.slug))
+    .sort((first, second) =>
+      second.sameType - first.sameType
+      || second.sharedServices - first.sharedServices
+      || first.distance - second.distance
+      || first.index - second.index,
+    );
+
+  for (const { project } of ranked) {
+    seen.add(project.slug);
+    selected.push(project);
     if (selected.length === limit) break;
   }
 

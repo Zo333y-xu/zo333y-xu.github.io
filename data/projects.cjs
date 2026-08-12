@@ -1,6 +1,18 @@
 const placeholder = "assets/images/project-placeholder.svg";
 
-function project({ slug, title, titleZh, client = "", year, type, services, sourceUrl = null, featuredOrder = null }) {
+function project({
+  slug,
+  title,
+  titleZh,
+  client = "",
+  year,
+  type,
+  services,
+  sourceUrl = null,
+  featuredOrder = null,
+  poster = placeholder,
+  video = null,
+}) {
   return {
     slug,
     title,
@@ -8,8 +20,8 @@ function project({ slug, title, titleZh, client = "", year, type, services, sour
     client,
     year,
     background: `${title} is a ${year} ${type} project${client ? ` for ${client}` : ""}.`,
-    poster: placeholder,
-    video: null,
+    poster,
+    video,
     sourceUrl,
     imageAlt: `${title} project preview`,
     type,
@@ -21,12 +33,12 @@ function project({ slug, title, titleZh, client = "", year, type, services, sour
 }
 
 module.exports = [
-  project({ slug: "showreel", title: "showreel", titleZh: "混剪", year: 2026, type: "3C & Tech", services: ["CG & VFX", "Online"], featuredOrder: 1 }),
+  project({ slug: "showreel", title: "showreel", titleZh: "混剪", year: 2026, type: "3C & Tech", services: ["CG & VFX", "Online"], featuredOrder: 1, poster: "assets/images/showreel-cover.png", video: "assets/videos/showreel.mp4" }),
   project({ slug: "huawei-freebuds-pro-3", title: "HUAWEI FreeBuds Pro 3", titleZh: "领听原声 不同凡响", client: "HUAWEI", year: 2023, type: "3C & Tech", services: ["CG & VFX", "Online"], sourceUrl: "https://www.xinpianchang.com/a12725011?from=UserProfile", featuredOrder: 2 }),
   project({ slug: "huawei-nora-band-10", title: "HUAWEI｜NORA BAND 10", titleZh: "NORA手环", client: "HUAWEI", year: 2025, type: "3C & Tech", services: ["CG & VFX", "Online"], sourceUrl: "https://www.xinpianchang.com/a13392086?from=UserProfile", featuredOrder: 3 }),
-  project({ slug: "sanrio-brand-2025", title: "Sanrio Brand 2025", titleZh: "三丽鸥2025宣传片", client: "Sanrio", year: 2025, type: "Beauty & Fashion", services: ["CG & VFX", "Online"], sourceUrl: "https://www.xinpianchang.com/a13510387?searchKw=sanrio&from=search_post", featuredOrder: 4 }),
-  project({ slug: "friso-x-volvo", title: "Friso x volvo", titleZh: "皇家美素佳儿 x volvo", client: "Friso x volvo", year: 2025, type: "FMCG", services: ["2D Animation", "CG & VFX"], sourceUrl: "https://www.xinpianchang.com/a13513627?searchKw=%E7%BE%8E%E7%B4%A0%E4%BD%B3%E5%84%BF&from=search_post", featuredOrder: 5 }),
-  project({ slug: "cubee", title: "Cubee", titleZh: "Cubee", year: 2026, type: "Short Film", services: ["AIGC"], featuredOrder: 6 }),
+  project({ slug: "sanrio-brand-2025", title: "Sanrio Brand 2025", titleZh: "三丽鸥2025宣传片", client: "Sanrio", year: 2025, type: "Beauty & Fashion", services: ["CG & VFX", "Online"], sourceUrl: "https://www.xinpianchang.com/a13510387?searchKw=sanrio&from=search_post", featuredOrder: 4, poster: "assets/images/sanrio-brand-2025-cover.jpg", video: "assets/videos/sanrio-brand-2025.mp4" }),
+  project({ slug: "friso-x-volvo", title: "Friso x volvo", titleZh: "皇家美素佳儿 x volvo", client: "Friso x volvo", year: 2025, type: "FMCG", services: ["2D Animation", "CG & VFX"], sourceUrl: "https://www.xinpianchang.com/a13513627?searchKw=%E7%BE%8E%E7%B4%A0%E4%BD%B3%E5%84%BF&from=search_post", featuredOrder: 5, poster: "assets/images/friso-x-volvo-cover.jpg", video: "assets/videos/friso-x-volvo.mp4" }),
+  project({ slug: "cubee", title: "Cubee", titleZh: "Cubee", year: 2026, type: "Short Film", services: ["AIGC"], featuredOrder: 6, poster: "assets/images/cubee-cover.jpg", video: "assets/videos/cubee.mp4" }),
   project({ slug: "universal-studio", title: "Universal Studio", titleZh: "北京环球万圣节‘惊彩’来袭", client: "Universal Studio", year: 2024, type: "Short Film", services: ["CG & VFX"], sourceUrl: "https://www.xinpianchang.com/a13165516?from=UserProfile", featuredOrder: 7 }),
   project({ slug: "huawei-watch-ultimate-design", title: "HUAWEI WATCH ULTIMATE DESIGN", titleZh: "非凡大师 星钻绽放_艺术家视频", client: "HUAWEI", year: 2026, type: "3C & Tech", services: ["Online"], sourceUrl: "https://www.xinpianchang.com/a13700670?from=share&xpcApp=xpc&channel=wx&type=URL", featuredOrder: 8 }),
   project({ slug: "game-for-peace", title: "Game for Peace", titleZh: "虞书欣《心弦》X和平精英", client: "Game for Peace", year: 2025, type: "3C & Tech", services: ["Online"], sourceUrl: "https://www.xinpianchang.com/a13262972?from=share&xpcApp=xpc&channel=wx&type=URL", featuredOrder: 9 }),

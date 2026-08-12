@@ -194,6 +194,21 @@ test("catalog search text includes every assigned canonical service", () => {
   }
 });
 
+test("supplied projects use their verified web media", () => {
+  const expectedMedia = {
+    showreel: ["assets/images/showreel-cover.png", "assets/videos/showreel.mp4"],
+    "sanrio-brand-2025": ["assets/images/sanrio-brand-2025-cover.jpg", "assets/videos/sanrio-brand-2025.mp4"],
+    "friso-x-volvo": ["assets/images/friso-x-volvo-cover.jpg", "assets/videos/friso-x-volvo.mp4"],
+    cubee: ["assets/images/cubee-cover.jpg", "assets/videos/cubee.mp4"],
+  };
+
+  for (const [slug, [poster, video]] of Object.entries(expectedMedia)) {
+    const project = projects.find((item) => item.slug === slug);
+    assert.equal(project.poster, poster, `${slug} poster`);
+    assert.equal(project.video, video, `${slug} video`);
+  }
+});
+
 test("recommendations preserve valid explicit order and exclude current project", () => {
   const projects = [
     { ...validProject, slug: "a", recommendedProjects: ["c", "a", "missing", "b"] },
@@ -226,6 +241,23 @@ test("project cards serialize every assigned service for independent directory U
   assert.match(html, /data-services="AIGC\|CG &amp; VFX"/);
   assert.doesNotMatch(html, /data-service="/);
   assert.doesNotMatch(html, /href="#"/);
+});
+
+test("automatic recommendations rank Type, shared Services, then catalog distance", () => {
+  const catalog = completeCatalog();
+  const current = catalog[0];
+  current.type = "3C & Tech";
+  current.services = ["CG & VFX", "Online"];
+  current.recommendedProjects = [];
+
+  catalog[1] = { ...catalog[1], type: "3C & Tech", services: ["Online"] };
+  catalog[2] = { ...catalog[2], type: "3C & Tech", services: ["CG & VFX", "Online"] };
+  catalog[3] = { ...catalog[3], type: "FMCG", services: ["CG & VFX", "Online"] };
+
+  assert.deepEqual(
+    selectRecommendations(current.slug, catalog, 3).map((project) => project.slug),
+    [catalog[2].slug, catalog[1].slug, catalog[3].slug],
+  );
 });
 
 test("placeholder project cards render a visible project-specific caption", () => {

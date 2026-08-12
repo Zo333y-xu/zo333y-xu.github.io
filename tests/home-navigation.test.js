@@ -7,6 +7,8 @@ const css = fs.readFileSync(path.join(root, "assets", "styles.css"), "utf8");
 const home = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const projectsPage = fs.readFileSync(path.join(root, "projects.html"), "utf8");
 const placeholderSvg = fs.readFileSync(path.join(root, "assets", "images", "project-placeholder.svg"), "utf8");
+const catalog = require("../data/projects.cjs");
+const placeholderPath = "assets/images/project-placeholder.svg";
 
 function cssRule(selector) {
   const start = css.indexOf(selector);
@@ -66,7 +68,7 @@ assert.doesNotMatch(css, /\.home-project-title/);
 
 assert.equal(
   (home.match(/class="work-panel-caption"/g) || []).length,
-  10,
+  catalog.filter((project) => project.featuredOrder !== null && project.poster === placeholderPath).length,
   "Every placeholder home panel needs a visible project-specific caption.",
 );
 assert.match(
@@ -77,7 +79,7 @@ assert.match(
 
 assert.equal(
   (projectsPage.match(/class="project-card reveal"[^>]*data-placeholder/g) || []).length,
-  23,
+  catalog.filter((project) => project.poster === placeholderPath).length,
   "Every placeholder Projects card must identify itself as a placeholder tile.",
 );
 const placeholderTitleRule = cssRule(".project-card[data-placeholder] .project-title");
