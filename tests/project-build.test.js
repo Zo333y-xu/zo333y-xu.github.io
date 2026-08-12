@@ -13,6 +13,7 @@ const {
   renderProjectDetail,
   renderHomePage,
   renderHomeProject,
+  renderProjectsPage,
   selectFeaturedProjects,
   buildSite,
 } = require("../scripts/project-build.cjs");
@@ -141,12 +142,23 @@ test("recommendations never duplicate a project", () => {
   );
 });
 
-test("project cards link to independent directory URLs", () => {
-  const html = renderProjectCard(validProject);
+test("project cards serialize every assigned service for independent directory URLs", () => {
+  const html = renderProjectCard({ ...validProject, services: ["AIGC", "CG & VFX"] });
   assert.match(html, /href="projects\/the-dawn\/"/);
   assert.match(html, /data-type="Short Film"/);
-  assert.match(html, /data-service="Online"/);
+  assert.match(html, /data-services="AIGC\|CG &amp; VFX"/);
+  assert.doesNotMatch(html, /data-service="/);
   assert.doesNotMatch(html, /href="#"/);
+});
+
+test("projects page lists canonical service filters in display order", () => {
+  const html = renderProjectsPage([validProject]);
+  const servicePanel = html.match(/data-browse-panel="service"[\s\S]*?<\/div>/)?.[0] || "";
+  const labels = [...servicePanel.matchAll(/data-project-filter="([^"]+)"/g)]
+    .map((match) => match[1]);
+
+  assert.deepEqual(labels, ["AIGC", "CG &amp; VFX", "2D Animation", "Online"]);
+  assert.doesNotMatch(html, /AI-Generated|CG&amp;VFX/);
 });
 
 test("detail page contains accessible lazy MP4 player and project content", () => {

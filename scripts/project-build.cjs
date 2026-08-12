@@ -134,7 +134,7 @@ ${panels}
 
 function renderProjectCard(project, prefix = "") {
   const href = `${prefix}projects/${escapeHtml(project.slug)}/`;
-  return `      <a class="project-card reveal" href="${href}" data-type="${escapeHtml(project.type)}" data-service="${escapeHtml(project.services[0])}" data-search="${escapeHtml(project.search)}">
+  return `      <a class="project-card reveal" href="${href}" data-type="${escapeHtml(project.type)}" data-services="${escapeHtml(project.services.join("|"))}" data-search="${escapeHtml(project.search)}">
         <img src="${prefix}${escapeHtml(project.poster)}" alt="${escapeHtml(project.imageAlt)}" loading="lazy">
         <span class="project-title"><span>${escapeHtml(project.title)}</span></span>
         <span class="project-hover">OPEN <span>watch<br>see case</span></span>
@@ -174,16 +174,10 @@ function renderProjectsPage(projects) {
   <main id="main">
     <section class="browse-stage" aria-live="polite">
       <div class="browse-panel" data-browse-panel="type" hidden>
-        <button type="button" data-project-filter="3C &amp; Tech">3C &amp; Tech</button>
-        <button type="button" data-project-filter="Automotive">Automotive</button>
-        <button type="button" data-project-filter="FMCG">FMCG</button>
-        <button type="button" data-project-filter="Beauty &amp; Fashion">Beauty &amp; Fashion</button>
-        <button type="button" data-project-filter="Short film">Short film</button>
+${TYPE_VALUES.map((type) => `        <button type="button" data-project-filter="${escapeHtml(type)}">${escapeHtml(type)}</button>`).join("\n")}
       </div>
       <div class="browse-panel" data-browse-panel="service" hidden>
-        <button type="button" data-project-filter="AI-Generated">AI-Generated</button>
-        <button type="button" data-project-filter="CG&amp;VFX">CG&amp;VFX</button>
-        <button type="button" data-project-filter="Online">Online</button>
+${SERVICE_VALUES.map((service) => `        <button type="button" data-project-filter="${escapeHtml(service)}">${escapeHtml(service)}</button>`).join("\n")}
       </div>
       <div class="browse-panel browse-panel--search" data-browse-panel="search" hidden>
         <label class="sr-only" for="project-search">Search projects</label>

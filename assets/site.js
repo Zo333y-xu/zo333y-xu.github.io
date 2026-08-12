@@ -49,6 +49,13 @@
   const search = document.querySelector("#project-search");
   const status = document.querySelector("[data-filter-status]");
 
+  const matchesProjectFilter = (card, filter) => {
+    const services = card.dataset.services.split("|");
+    return card.dataset.type === filter
+      || services.includes(filter)
+      || card.dataset.search.toLowerCase().includes(filter.toLowerCase());
+  };
+
   const showAllCards = () => {
     cards.forEach((card) => { card.hidden = false; });
     if (status) status.textContent = "";
@@ -80,7 +87,7 @@
     button.addEventListener("click", () => {
       const filter = button.dataset.projectFilter;
       cards.forEach((card) => {
-        card.hidden = card.dataset.type !== filter && card.dataset.service !== filter;
+        card.hidden = !matchesProjectFilter(card, filter);
       });
       setStatus(filter);
     });
@@ -89,7 +96,7 @@
   search?.addEventListener("input", () => {
     const query = search.value.trim().toLowerCase();
     cards.forEach((card) => {
-      card.hidden = Boolean(query) && !card.dataset.search.toLowerCase().includes(query);
+      card.hidden = Boolean(query) && !matchesProjectFilter(card, query);
     });
     setStatus(query || "");
   });
