@@ -206,7 +206,7 @@ test("supplied projects use their verified web media", () => {
     "huawei-watch-fit-5-niki": ["assets/images/huawei-watch-fit-5-niki-cover.png", "assets/videos/huawei-watch-fit-5-niki.mp4"],
     "anta-milan": ["assets/images/anta-milan-cover.png", "assets/videos/anta-milan.mp4"],
     "honor-x-fifa": ["assets/images/honor-x-fifa-cover.png", "assets/videos/honor-x-fifa.mp4"],
-    "lays-cny-campaign": ["assets/images/lays-cny-campaign-cover.png", "assets/videos/lays-cny-campaign.mp4"],
+    "lays-cny-campaign": ["assets/images/lays-cny-campaign-cover.jpg", "assets/videos/lays-cny-campaign.mp4"],
     "touareg-x-wu-jing": ["assets/images/touareg-x-wu-jing-cover.png", "assets/videos/touareg-x-wu-jing.mp4"],
   };
 
@@ -411,10 +411,14 @@ test("projects with supplied local media use their published assets", () => {
   const projectRoot = path.resolve(__dirname, "..");
   const expectedMedia = {
     sprite: ["assets/images/sprite-cover.png", "assets/videos/sprite.mp4"],
-    "huawei-home": ["assets/images/huawei-home-cover.png", "assets/videos/huawei-home.mp4"],
+    "huawei-home": ["assets/images/huawei-home-cover.jpg", "assets/videos/huawei-home.mp4"],
     "sumsung-x-hua-chenyu": ["assets/images/sumsung-x-hua-chenyu-cover.png", "assets/videos/sumsung-x-hua-chenyu.mp4"],
     "master-kong-ice-tea-x-tnt": ["assets/images/master-kong-ice-tea-x-tnt-cover.jpg", "assets/videos/master-kong-ice-tea-x-tnt.mp4"],
     "huawei-watch-ultimate-design": ["assets/images/huawei-watch-ultimate-design-cover.png", "assets/videos/huawei-watch-ultimate-design.mp4"],
+    "oppo-r11": ["assets/images/oppo-r11-cover.png", "assets/videos/oppo-r11.mp4"],
+    "adidas-zne": ["assets/images/adidas-zne-cover.png", "assets/videos/adidas-zne.mp4"],
+    "descente-x-daniel-wu": ["assets/images/descente-x-daniel-wu-cover.png", "assets/videos/descente-x-daniel-wu.mp4"],
+    "audi-x-zheng-qinwen": ["assets/images/audi-x-zheng-qinwen-cover.png", "assets/videos/audi-x-zheng-qinwen.mp4"],
   };
 
   for (const [slug, [poster, video]] of Object.entries(expectedMedia)) {
@@ -424,6 +428,19 @@ test("projects with supplied local media use their published assets", () => {
     assert.equal(fs.existsSync(path.join(projectRoot, poster)), true);
     assert.equal(fs.existsSync(path.join(projectRoot, video)), true);
     assert.ok(fs.statSync(path.join(projectRoot, video)).size < 100 * 1024 * 1024, `${slug} video must remain below GitHub's 100 MB limit`);
+  }
+});
+
+test("Lay’s and Pepsi use the supplied replacement covers", () => {
+  const projectRoot = path.resolve(__dirname, "..");
+  const expectedPosters = {
+    "lays-cny-campaign": "assets/images/lays-cny-campaign-cover.jpg",
+    "pepsi-summer-campaign": "assets/images/pepsi-summer-campaign-cover.png",
+  };
+
+  for (const [slug, poster] of Object.entries(expectedPosters)) {
+    assert.equal(projects.find((item) => item.slug === slug).poster, poster);
+    assert.equal(fs.existsSync(path.join(projectRoot, poster)), true);
   }
 });
 

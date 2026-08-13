@@ -24,12 +24,10 @@
     <section class="project-intro">
       <h1>Adidas ZNE</h1>
     </section>
-    <section class="project-player project-player--fallback">
-      <img src="../../assets/images/project-placeholder.svg" alt="Adidas ZNE project preview">
-      <div class="project-player-fallback-content">
-        <p>Video coming soon</p>
-        <a class="project-source-link" href="https://www.xinpianchang.com/a10913287?from=UserProfile" target="_blank" rel="noopener noreferrer">View source</a>
-      </div>
+    <section class="project-player" data-project-player>
+      <video poster="../../assets/images/adidas-zne-cover.png" data-video-src="../../assets/videos/adidas-zne.mp4" preload="metadata" playsinline controls aria-label="Adidas ZNE video"></video>
+      <button class="project-play-button" type="button" data-play-project aria-label="Play Adidas ZNE"><span aria-hidden="true"></span></button>
+      <div class="project-video-error" data-video-error role="alert" hidden>Video could not be loaded. <button type="button" data-video-retry>Try again</button></div>
     </section>
     <section class="project-background">
       <h2>Background</h2>
@@ -39,7 +37,7 @@
       <h2 id="browse-more-heading">Browse More</h2>
       <div class="browse-more-grid">
       <a class="browse-more-card" href="../descente-x-daniel-wu/">
-        <img src="../../assets/images/project-placeholder.svg" alt="DESCENTE x Daniel Wu project preview" loading="lazy">
+        <img src="../../assets/images/descente-x-daniel-wu-cover.png" alt="DESCENTE x Daniel Wu project preview" loading="lazy">
         <span>DESCENTE x Daniel Wu</span>
       </a>
       <a class="browse-more-card" href="../anta-milan/">
