@@ -231,7 +231,7 @@ button { color: inherit; }
   padding: clamp(16px, 4vw, 56px);
   color: var(--white);
   font-size: clamp(20px, 2.4vw, 42px);
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -.035em;
   line-height: 1.05;
   text-align: center;

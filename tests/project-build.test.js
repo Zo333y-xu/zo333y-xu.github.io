@@ -400,6 +400,7 @@ test("catalog preserves Excel project facts and supplied source URLs", () => {
   const showreel = projects.find((item) => item.slug === "showreel");
   const niki = projects.find((item) => item.slug === "huawei-watch-fit-5-niki");
   assert.equal(showreel.titleZh, "混剪");
+  assert.equal(showreel.title, "SHOWREEL");
   assert.equal(showreel.featuredOrder, 1);
   assert.equal(niki.title, "HUAWEI WATCH Fit 5 Niki");
   assert.equal(niki.featuredOrder, 10);
