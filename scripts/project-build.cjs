@@ -1,6 +1,12 @@
+const { posix } = require("node:path");
+
+const TYPE_VALUES = ["3C & Tech", "Automotive", "FMCG", "Beauty & Fashion", "Short Film"];
+const SERVICE_VALUES = ["AIGC", "CG & VFX", "2D Animation", "Online"];
+const PROJECT_COUNT = 23;
+const PLACEHOLDER_POSTER = "assets/images/project-placeholder.svg";
 const REQUIRED_FIELDS = [
-  "slug", "title", "background", "poster", "video", "imageAlt",
-  "type", "service", "search", "recommendedProjects",
+  "slug", "title", "titleZh", "background", "poster", "imageAlt",
+  "type", "services", "search", "recommendedProjects",
 ];
 
 function escapeHtml(value) {
@@ -13,8 +19,48 @@ function escapeHtml(value) {
   }[character]));
 }
 
+function isHttpsUrl(value) {
+  if (typeof value !== "string" || value.trim() !== value || value === "") return false;
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isNormalizedAssetPath(value, directory, extension = null, directChild = false) {
+  if (typeof value !== "string" || value.trim() !== value || value === "" || value.includes("\\")) return false;
+  if (posix.normalize(value) !== value) return false;
+
+  const relativePath = posix.relative(directory, value);
+  if (relativePath === "" || relativePath === ".." || relativePath.startsWith("../") || posix.isAbsolute(relativePath)) return false;
+  if (directChild && relativePath.includes("/")) return false;
+  return extension === null || relativePath.endsWith(extension);
+}
+
+function isNormalizedPosterPath(value) {
+  return isNormalizedAssetPath(value, "assets/images");
+}
+
+function isNormalizedVideoPath(value) {
+  return isNormalizedAssetPath(value, "assets/videos", ".mp4", true);
+}
+
+function isPlaceholderPoster(value) {
+  return value === PLACEHOLDER_POSTER;
+}
+
+function isResolvedChildPath(parentPath, childPath, path) {
+  const relativePath = path.relative(parentPath, childPath);
+  return relativePath !== "" && relativePath !== ".." && !relativePath.startsWith(`..${path.sep}`) && !path.isAbsolute(relativePath);
+}
+
 function validateProjects(projects) {
+  if (!Array.isArray(projects) || projects.length !== PROJECT_COUNT) {
+    throw new Error(`catalog must contain exactly ${PROJECT_COUNT} projects`);
+  }
   const slugs = new Set();
+  const featuredOrders = [];
   for (const project of projects) {
     for (const field of REQUIRED_FIELDS) {
       const value = project[field];
@@ -27,6 +73,35 @@ function validateProjects(projects) {
     }
     if (slugs.has(project.slug)) throw new Error(`duplicate slug: ${project.slug}`);
     slugs.add(project.slug);
+
+    if (typeof project.client !== "string") throw new Error(`${project.slug}: invalid client`);
+    if (!Number.isInteger(project.year)) throw new Error(`${project.slug}: invalid year`);
+    if (!isNormalizedPosterPath(project.poster)) throw new Error(`${project.slug}: invalid poster`);
+    if (project.video !== null && !isNormalizedVideoPath(project.video)) {
+      throw new Error(`${project.slug}: invalid video`);
+    }
+    if (project.sourceUrl !== null && !isHttpsUrl(project.sourceUrl)) {
+      throw new Error(`${project.slug}: invalid sourceUrl`);
+    }
+    if (!TYPE_VALUES.includes(project.type)) throw new Error(`${project.slug}: invalid type`);
+    if (!Array.isArray(project.services) || project.services.length < 1 || project.services.length > 3) {
+      throw new Error(`${project.slug}: invalid services`);
+    }
+    if (new Set(project.services).size !== project.services.length || project.services.some((service) => !SERVICE_VALUES.includes(service))) {
+      throw new Error(`${project.slug}: invalid services`);
+    }
+    if (project.featuredOrder !== null) {
+      if (!Number.isInteger(project.featuredOrder) || project.featuredOrder < 1 || project.featuredOrder > 10) {
+        throw new Error(`${project.slug}: invalid featuredOrder`);
+      }
+      featuredOrders.push(project.featuredOrder);
+    }
+  }
+  if (new Set(featuredOrders).size !== featuredOrders.length) {
+    throw new Error("duplicate featuredOrder");
+  }
+  if (featuredOrders.length !== 10) {
+    throw new Error("featuredOrder values must cover 1 through 10");
   }
 }
 
@@ -35,24 +110,105 @@ function selectRecommendations(currentSlug, projects, limit = 3) {
   if (!current) throw new Error(`unknown project: ${currentSlug}`);
 
   const bySlug = new Map(projects.map((project) => [project.slug, project]));
+  const currentIndex = projects.indexOf(current);
   const selected = [];
   const seen = new Set([currentSlug]);
 
-  for (const slug of [...current.recommendedProjects, ...projects.map((project) => project.slug)]) {
+  for (const slug of current.recommendedProjects) {
     if (seen.has(slug) || !bySlug.has(slug)) continue;
     seen.add(slug);
     selected.push(bySlug.get(slug));
     if (selected.length === limit) break;
   }
 
+  const ranked = projects
+    .map((project, index) => ({
+      project,
+      index,
+      sameType: project.type === current.type ? 1 : 0,
+      sharedServices: project.services.filter((service) => current.services.includes(service)).length,
+      distance: Math.abs(index - currentIndex),
+    }))
+    .filter(({ project }) => !seen.has(project.slug))
+    .sort((first, second) =>
+      second.sameType - first.sameType
+      || second.sharedServices - first.sharedServices
+      || first.distance - second.distance
+      || first.index - second.index,
+    );
+
+  for (const { project } of ranked) {
+    seen.add(project.slug);
+    selected.push(project);
+    if (selected.length === limit) break;
+  }
+
   return selected;
+}
+
+function selectFeaturedProjects(projects) {
+  return projects
+    .filter((project) => project.featuredOrder !== null)
+    .sort((first, second) => first.featuredOrder - second.featuredOrder);
+}
+
+function renderHomeProject(project, options = {}) {
+  const loading = options.lazy ? ' loading="lazy"' : "";
+  const placeholder = isPlaceholderPoster(project.poster);
+  const placeholderAttribute = placeholder ? " data-placeholder" : "";
+  const caption = placeholder ? `\n      <span class="work-panel-caption">${escapeHtml(project.title)}</span>` : "";
+  return `    <a class="work-panel reveal" href="projects/${escapeHtml(project.slug)}/"${placeholderAttribute} aria-label="${escapeHtml(project.title)}">
+      <img src="${escapeHtml(project.poster)}" alt="${escapeHtml(project.imageAlt)}"${loading}>
+${caption}
+    </a>`;
+}
+
+function renderHomePage(projects) {
+  const panels = selectFeaturedProjects(projects)
+    .map((project, index) => renderHomeProject(project, { lazy: index > 0 }))
+    .join("\n");
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="White Pix creative post-production studio.">
+  <title>White Pix | Creative Post-Production</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script src="assets/site.js" defer></script>
+  <script src="assets/intro-gate.js" defer></script>
+</head>
+<body class="home-page intro-scroll-lock">
+  <section class="site-intro" data-intro aria-label="Site introduction">
+    <video data-intro-video src="assets/videos/site-intro.mp4" muted autoplay playsinline preload="auto"></video>
+    <button type="button" data-intro-skip>Skip</button>
+  </section>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header site-header--over-image" data-header>
+    <a class="brand" href="index.html" aria-label="White Pix home">white pixl</a>
+    <nav class="primary-nav" aria-label="Primary navigation">
+      <a href="projects.html">Projects</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <button class="language-button" type="button" aria-label="Current language: English">En</button>
+    </nav>
+  </header>
+
+  <main id="main" class="home-projects">
+${panels}
+  </main>
+
+  ${renderFooter()}
+</body>
+</html>`;
 }
 
 function renderProjectCard(project, prefix = "") {
   const href = `${prefix}projects/${escapeHtml(project.slug)}/`;
-  return `      <a class="project-card reveal" href="${href}" data-type="${escapeHtml(project.type)}" data-service="${escapeHtml(project.service)}" data-search="${escapeHtml(project.search)}">
+  const placeholderAttribute = isPlaceholderPoster(project.poster) ? " data-placeholder" : "";
+  return `      <a class="project-card reveal" href="${href}"${placeholderAttribute} data-type="${escapeHtml(project.type)}" data-services="${escapeHtml(project.services.join("|"))}" data-search="${escapeHtml(project.search)}">
         <img src="${prefix}${escapeHtml(project.poster)}" alt="${escapeHtml(project.imageAlt)}" loading="lazy">
-        <span class="project-title"><span>${escapeHtml(project.title)}</span></span>
+        <span class="project-title"><span>${escapeHtml(project.title)}</span><small>${escapeHtml(project.titleZh)}</small></span>
         <span class="project-hover">OPEN <span>watch<br>see case</span></span>
       </a>`;
 }
@@ -90,16 +246,10 @@ function renderProjectsPage(projects) {
   <main id="main">
     <section class="browse-stage" aria-live="polite">
       <div class="browse-panel" data-browse-panel="type" hidden>
-        <button type="button" data-project-filter="3C &amp; Tech">3C &amp; Tech</button>
-        <button type="button" data-project-filter="Automotive">Automotive</button>
-        <button type="button" data-project-filter="FMCG">FMCG</button>
-        <button type="button" data-project-filter="Beauty &amp; Fashion">Beauty &amp; Fashion</button>
-        <button type="button" data-project-filter="Short film">Short film</button>
+${TYPE_VALUES.map((type) => `        <button type="button" data-project-filter="${escapeHtml(type)}">${escapeHtml(type)}</button>`).join("\n")}
       </div>
       <div class="browse-panel" data-browse-panel="service" hidden>
-        <button type="button" data-project-filter="AI-Generated">AI-Generated</button>
-        <button type="button" data-project-filter="CG&amp;VFX">CG&amp;VFX</button>
-        <button type="button" data-project-filter="Online">Online</button>
+${SERVICE_VALUES.map((service) => `        <button type="button" data-project-filter="${escapeHtml(service)}">${escapeHtml(service)}</button>`).join("\n")}
       </div>
       <div class="browse-panel browse-panel--search" data-browse-panel="search" hidden>
         <label class="sr-only" for="project-search">Search projects</label>
@@ -133,6 +283,28 @@ function renderRecommendation(project) {
       </a>`;
 }
 
+function renderProjectMedia(project) {
+  if (project.video !== null) {
+    if (!isNormalizedVideoPath(project.video)) throw new Error(`${project.slug}: invalid video`);
+    return `    <section class="project-player" data-project-player>
+      <video poster="../../${escapeHtml(project.poster)}" data-video-src="../../${escapeHtml(project.video)}" preload="metadata" playsinline controls aria-label="${escapeHtml(project.title)} video"></video>
+      <button class="project-play-button" type="button" data-play-project aria-label="Play ${escapeHtml(project.title)}"><span aria-hidden="true"></span></button>
+      <div class="project-video-error" data-video-error role="alert" hidden>Video could not be loaded. <button type="button" data-video-retry>Try again</button></div>
+    </section>`;
+  }
+
+  const sourceLink = !isHttpsUrl(project.sourceUrl)
+    ? ""
+    : `\n        <a class="project-source-link" href="${escapeHtml(project.sourceUrl)}" target="_blank" rel="noopener noreferrer">View source</a>`;
+
+  return `    <section class="project-player project-player--fallback">
+      <img src="../../${escapeHtml(project.poster)}" alt="${escapeHtml(project.imageAlt)}">
+      <div class="project-player-fallback-content">
+        <p>Video coming soon</p>${sourceLink}
+      </div>
+    </section>`;
+}
+
 function renderProjectDetail(project, recommendations) {
   const recommendedCards = recommendations.map(renderRecommendation).join("\n");
   return `<!doctype html>
@@ -161,11 +333,7 @@ function renderProjectDetail(project, recommendations) {
     <section class="project-intro">
       <h1>${escapeHtml(project.title)}</h1>
     </section>
-    <section class="project-player" data-project-player>
-      <video poster="../../${escapeHtml(project.poster)}" data-video-src="../../${escapeHtml(project.video)}" preload="metadata" playsinline controls aria-label="${escapeHtml(project.title)} video"></video>
-      <button class="project-play-button" type="button" data-play-project aria-label="Play ${escapeHtml(project.title)}"><span aria-hidden="true"></span></button>
-      <div class="project-video-error" data-video-error role="alert" hidden>Video could not be loaded. <button type="button" data-video-retry>Try again</button></div>
-    </section>
+${renderProjectMedia(project)}
     <section class="project-background">
       <h2>Background</h2>
       <p>${escapeHtml(project.background)}</p>
@@ -182,27 +350,170 @@ ${recommendedCards}
 </html>`;
 }
 
+function inspectProjectRoot(rootDir, projectRoot, fs, path) {
+  let projectRootStats;
+  try {
+    projectRootStats = fs.lstatSync(projectRoot);
+  } catch (error) {
+    if (error.code === "ENOENT") return null;
+    throw error;
+  }
+  if (!projectRootStats.isDirectory() || projectRootStats.isSymbolicLink()) {
+    throw new Error("invalid project root");
+  }
+
+  const canonicalProjectRoot = fs.realpathSync(projectRoot);
+  const expectedProjectRoot = path.resolve(fs.realpathSync(path.resolve(rootDir)), "projects");
+  if (path.relative(expectedProjectRoot, canonicalProjectRoot) !== "") {
+    throw new Error("invalid project root");
+  }
+  return { canonicalProjectRoot, dev: projectRootStats.dev, ino: projectRootStats.ino };
+}
+
+function assertProjectRootUnchanged(snapshot, rootDir, projectRoot, fs, path) {
+  const current = inspectProjectRoot(rootDir, projectRoot, fs, path);
+  if (!current || current.canonicalProjectRoot !== snapshot.canonicalProjectRoot || current.dev !== snapshot.dev || current.ino !== snapshot.ino) {
+    throw new Error("project root changed");
+  }
+  return current;
+}
+
+function inspectProjectChild(rootSnapshot, projectRoot, name, fs, path) {
+  const projectPath = path.resolve(projectRoot, name);
+  if (!isResolvedChildPath(projectRoot, projectPath, path)) {
+    throw new Error(`invalid project output link: ${name}`);
+  }
+
+  const projectStats = fs.lstatSync(projectPath);
+  if (projectStats.isSymbolicLink()) {
+    throw new Error(`invalid project output link: ${name}`);
+  }
+  const canonicalProjectPath = fs.realpathSync(projectPath);
+  if (!isResolvedChildPath(rootSnapshot.canonicalProjectRoot, canonicalProjectPath, path)) {
+    throw new Error(`invalid project output link: ${name}`);
+  }
+  return { canonicalProjectPath, dev: projectStats.dev, ino: projectStats.ino };
+}
+
+function assertProjectChildUnchanged(snapshot, rootSnapshot, projectRoot, name, fs, path) {
+  const current = inspectProjectChild(rootSnapshot, projectRoot, name, fs, path);
+  if (current.canonicalProjectPath !== snapshot.canonicalProjectPath || current.dev !== snapshot.dev || current.ino !== snapshot.ino) {
+    throw new Error(`project child changed: ${name}`);
+  }
+  return current;
+}
+
+function assertProjectChildAbsent(projectRoot, name, fs, path) {
+  const projectPath = path.resolve(projectRoot, name);
+  if (!isResolvedChildPath(projectRoot, projectPath, path)) {
+    throw new Error(`invalid project output path: ${name}`);
+  }
+  try {
+    fs.lstatSync(projectPath);
+  } catch (error) {
+    if (error.code === "ENOENT") return;
+    throw error;
+  }
+  throw new Error(`project child changed: ${name}`);
+}
+
+function validateProjectAsset(rootDir, project, field, fs, path) {
+  const assetPath = project[field];
+  if (assetPath === null) return;
+
+  const absoluteRoot = path.resolve(rootDir);
+  const absoluteAsset = path.resolve(absoluteRoot, ...assetPath.split("/"));
+  let assetStats;
+  try {
+    assetStats = fs.lstatSync(absoluteAsset);
+  } catch (error) {
+    if (error.code === "ENOENT") throw new Error(`${project.slug}: missing ${field} asset`);
+    throw error;
+  }
+
+  if (!assetStats.isFile() || assetStats.isSymbolicLink()) {
+    throw new Error(`${project.slug}: invalid ${field} asset`);
+  }
+
+  const canonicalRoot = fs.realpathSync(absoluteRoot);
+  const canonicalAsset = fs.realpathSync(absoluteAsset);
+  if (!isResolvedChildPath(canonicalRoot, canonicalAsset, path)) {
+    throw new Error(`${project.slug}: invalid ${field} asset`);
+  }
+}
+
+function validateProjectAssets(rootDir, projects, fs, path) {
+  for (const project of projects) {
+    validateProjectAsset(rootDir, project, "poster", fs, path);
+    validateProjectAsset(rootDir, project, "video", fs, path);
+  }
+}
+
 function buildSite({ rootDir, projects, fs, path }) {
   validateProjects(projects);
+  validateProjectAssets(rootDir, projects, fs, path);
+  const projectRoot = path.resolve(rootDir, "projects");
+  const projectSlugs = new Set(projects.map((project) => project.slug));
+  let rootSnapshot = inspectProjectRoot(rootDir, projectRoot, fs, path);
+  if (!rootSnapshot) {
+    if (inspectProjectRoot(rootDir, projectRoot, fs, path) !== null) {
+      throw new Error("project root changed");
+    }
+    fs.mkdirSync(projectRoot, { recursive: true });
+    rootSnapshot = inspectProjectRoot(rootDir, projectRoot, fs, path);
+  }
+
+  const projectEntries = fs.readdirSync(projectRoot, { withFileTypes: true });
+  const childSnapshots = new Map(projectEntries.map((entry) => [
+    entry.name,
+    inspectProjectChild(rootSnapshot, projectRoot, entry.name, fs, path),
+  ]));
+  if (typeof fs.onProjectPreflight === "function") fs.onProjectPreflight();
+
+  for (const entry of projectEntries) {
+    if (!entry.isDirectory() || projectSlugs.has(entry.name)) continue;
+
+    assertProjectRootUnchanged(rootSnapshot, rootDir, projectRoot, fs, path);
+    assertProjectChildUnchanged(childSnapshots.get(entry.name), rootSnapshot, projectRoot, entry.name, fs, path);
+    fs.rmSync(path.resolve(projectRoot, entry.name), { recursive: true, force: false });
+  }
+
+  assertProjectRootUnchanged(rootSnapshot, rootDir, projectRoot, fs, path);
+  fs.writeFileSync(path.join(rootDir, "index.html"), renderHomePage(projects));
+  assertProjectRootUnchanged(rootSnapshot, rootDir, projectRoot, fs, path);
   fs.writeFileSync(path.join(rootDir, "projects.html"), renderProjectsPage(projects));
+
   for (const project of projects) {
-    const outputDirectory = path.resolve(rootDir, "projects", project.slug);
-    const projectRoot = path.resolve(rootDir, "projects");
-    if (!outputDirectory.startsWith(`${projectRoot}${path.sep}`)) {
-      throw new Error(`invalid project output path: ${project.slug}`);
+    const outputDirectory = path.resolve(projectRoot, project.slug);
+    if (childSnapshots.has(project.slug)) {
+      assertProjectRootUnchanged(rootSnapshot, rootDir, projectRoot, fs, path);
+      assertProjectChildUnchanged(childSnapshots.get(project.slug), rootSnapshot, projectRoot, project.slug, fs, path);
+    } else {
+      assertProjectRootUnchanged(rootSnapshot, rootDir, projectRoot, fs, path);
+      assertProjectChildAbsent(projectRoot, project.slug, fs, path);
     }
     fs.mkdirSync(outputDirectory, { recursive: true });
+
+    const childSnapshot = inspectProjectChild(rootSnapshot, projectRoot, project.slug, fs, path);
+    assertProjectRootUnchanged(rootSnapshot, rootDir, projectRoot, fs, path);
+    assertProjectChildUnchanged(childSnapshot, rootSnapshot, projectRoot, project.slug, fs, path);
     const recommendations = selectRecommendations(project.slug, projects);
     fs.writeFileSync(path.join(outputDirectory, "index.html"), renderProjectDetail(project, recommendations));
   }
 }
 
 module.exports = {
+  SERVICE_VALUES,
+  TYPE_VALUES,
   buildSite,
   escapeHtml,
   renderProjectCard,
   renderProjectDetail,
+  renderProjectMedia,
+  renderHomePage,
+  renderHomeProject,
   renderProjectsPage,
+  selectFeaturedProjects,
   selectRecommendations,
   validateProjects,
 };

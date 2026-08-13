@@ -1,42 +1,65 @@
 # White Pix static website
 
-Open `index.html` directly, or run a local static server from this folder.
+The site is generated from one catalog and can be opened from `index.html` or
+served locally. It publishes 23 project records, plus a separate session-once
+intro. Ten catalog projects are selected for the full-viewport home sequence.
 
-Example with Python:
+## Build and test
+
+Install Node.js 20 or newer with npm, then use the same portable commands on
+Windows, macOS, or Linux:
+
+```sh
+npm test
+npm run build
+```
+
+The build validates the catalog and its local media before changing generated
+output, rewrites the home and Projects pages, reconciles exactly 23 managed
+project directories, and regenerates each detail page. Run both commands before
+publishing.
+
+## Local preview
 
 ```powershell
 python -m http.server 8080
 ```
 
-Then visit `http://localhost:8080`.
+Open `http://localhost:8080`. The generated pages are `index.html`,
+`projects.html`, and `projects/<slug>/index.html`; `about.html` and
+`contact.html` remain standalone pages.
 
-Pages:
+## Project catalog schema
 
-- `index.html` - Home
-- `projects.html` - Projects with Type, Media and Search browsing
-- `about.html` - About and clients
-- `contact.html` - Contact details and Shanghai studio map
+All project content lives in `data/projects.cjs`. Every record contains:
 
-## Adding or replacing a project
+- `slug`: unique, stable, lowercase hyphenated URL segment
+- `title`, `titleZh`, `client`, `year`, and factual English `background`
+- `poster`, nullable local `video`, nullable HTTPS `sourceUrl`, and `imageAlt`
+- one canonical `type` and one to three unique canonical `services`
+- `search`, nullable `featuredOrder`, and `recommendedProjects` slug list
 
-All project content lives in `data/projects.cjs`. To add a project, copy its
-poster image to `assets/images/`, copy its web-ready H.264/AAC MP4 file to
-`assets/videos/`, then add one record with a unique lowercase `slug`.
+Canonical Type labels are `3C & Tech`, `Automotive`, `FMCG`,
+`Beauty & Fashion`, and `Short Film`. Canonical Service labels, in display
+order, are `AIGC`, `CG & VFX`, `2D Animation`, and `Online`.
 
-Required fields are `slug`, `title`, `background`, `poster`, `video`,
-`imageAlt`, `type`, `service`, `search`, and `recommendedProjects`. Use
-existing slugs in `recommendedProjects`; invalid or repeated slugs are safely
-skipped and other projects fill the available Browse More slots.
+Do not change an existing `slug` when replacing media or copy. The slug is the
+stable public address and may also be referenced by `recommendedProjects`.
+Use existing slugs in that list; invalid or repeated entries are skipped and
+other projects fill the available Browse More slots.
 
-Run the following before publishing:
+## Media replacement
 
-```powershell
-$node = "C:\Users\xuziw\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"
-& $node --test tests/*.test.js
-& $node scripts/build.cjs
-```
+The supplied intro source is outside the repository at
+`D:\xwechat_files\wxid_mo3c9nf8jys422_6f51\msg\video\2026-08\b891f7949b42d0d7c7d76e621006ce1c.mp4`.
+Its published site path is `assets/videos/site-intro.mp4`; only the published
+path is referenced by generated HTML. Project media belongs in `assets/images/`
+and `assets/videos/`.
 
-The build updates `projects.html` and generates the independent page at
-`projects/<slug>/index.html`. To replace an existing video while keeping its
-address, replace its MP4 file and rerun the build. Rename the MP4 or add a
-version query only when you need browsers to bypass a cached older video.
+When final artwork is unavailable, set `poster` to
+`assets/images/project-placeholder.svg`. When a verified local MP4 is
+unavailable, set `video: null`; the detail page then renders a proportional,
+readable `Video coming soon` fallback and may show the HTTPS `sourceUrl` as an
+ordinary external link. To publish final media, replace the placeholder path
+with the new local poster path and/or replace `null` with the local MP4 path,
+keep the project slug unchanged, and rebuild.
