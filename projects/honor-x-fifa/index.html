@@ -24,12 +24,10 @@
     <section class="project-intro">
       <h1>HONOR x FIFA</h1>
     </section>
-    <section class="project-player project-player--fallback">
-      <img src="../../assets/images/project-placeholder.svg" alt="HONOR x FIFA project preview">
-      <div class="project-player-fallback-content">
-        <p>Video coming soon</p>
-        <a class="project-source-link" href="https://www.xinpianchang.com/a13730535?from=UserProfile" target="_blank" rel="noopener noreferrer">View source</a>
-      </div>
+    <section class="project-player" data-project-player>
+      <video poster="../../assets/images/honor-x-fifa-cover.png" data-video-src="../../assets/videos/honor-x-fifa.mp4" preload="metadata" playsinline controls aria-label="HONOR x FIFA video"></video>
+      <button class="project-play-button" type="button" data-play-project aria-label="Play HONOR x FIFA"><span aria-hidden="true"></span></button>
+      <div class="project-video-error" data-video-error role="alert" hidden>Video could not be loaded. <button type="button" data-video-retry>Try again</button></div>
     </section>
     <section class="project-background">
       <h2>Background</h2>

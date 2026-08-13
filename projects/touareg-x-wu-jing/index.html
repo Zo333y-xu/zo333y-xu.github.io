@@ -24,12 +24,10 @@
     <section class="project-intro">
       <h1>Touareg x Wu Jing</h1>
     </section>
-    <section class="project-player project-player--fallback">
-      <img src="../../assets/images/project-placeholder.svg" alt="Touareg x Wu Jing project preview">
-      <div class="project-player-fallback-content">
-        <p>Video coming soon</p>
-        <a class="project-source-link" href="https://www.xinpianchang.com/a10560730?from=UserProfile" target="_blank" rel="noopener noreferrer">View source</a>
-      </div>
+    <section class="project-player" data-project-player>
+      <video poster="../../assets/images/touareg-x-wu-jing-cover.png" data-video-src="../../assets/videos/touareg-x-wu-jing.mp4" preload="metadata" playsinline controls aria-label="Touareg x Wu Jing video"></video>
+      <button class="project-play-button" type="button" data-play-project aria-label="Play Touareg x Wu Jing"><span aria-hidden="true"></span></button>
+      <div class="project-video-error" data-video-error role="alert" hidden>Video could not be loaded. <button type="button" data-video-retry>Try again</button></div>
     </section>
     <section class="project-background">
       <h2>Background</h2>
@@ -47,7 +45,7 @@
         <span>OPPO R11</span>
       </a>
       <a class="browse-more-card" href="../lays-cny-campaign/">
-        <img src="../../assets/images/project-placeholder.svg" alt="Lay’s CNY Campaign project preview" loading="lazy">
+        <img src="../../assets/images/lays-cny-campaign-cover.png" alt="Lay’s CNY Campaign project preview" loading="lazy">
         <span>Lay’s CNY Campaign</span>
       </a>
       </div>

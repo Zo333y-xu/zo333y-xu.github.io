@@ -197,9 +197,17 @@ test("catalog search text includes every assigned canonical service", () => {
 test("supplied projects use their verified web media", () => {
   const expectedMedia = {
     showreel: ["assets/images/showreel-cover.png", "assets/videos/showreel.mp4"],
+    "huawei-freebuds-pro-3": ["assets/images/huawei-freebuds-pro-3-cover.png", "assets/videos/huawei-freebuds-pro-3.mp4"],
+    "huawei-nora-band-10": ["assets/images/huawei-nora-band-10-cover.png", "assets/videos/huawei-nora-band-10.mp4"],
     "sanrio-brand-2025": ["assets/images/sanrio-brand-2025-cover.jpg", "assets/videos/sanrio-brand-2025.mp4"],
     "friso-x-volvo": ["assets/images/friso-x-volvo-cover.jpg", "assets/videos/friso-x-volvo.mp4"],
     cubee: ["assets/images/cubee-cover.jpg", "assets/videos/cubee.mp4"],
+    "universal-studio": ["assets/images/universal-studio-cover.jpg", "assets/videos/universal-studio.mp4"],
+    "huawei-watch-fit-5-niki": ["assets/images/huawei-watch-fit-5-niki-cover.png", "assets/videos/huawei-watch-fit-5-niki.mp4"],
+    "anta-milan": ["assets/images/anta-milan-cover.png", "assets/videos/anta-milan.mp4"],
+    "honor-x-fifa": ["assets/images/honor-x-fifa-cover.png", "assets/videos/honor-x-fifa.mp4"],
+    "lays-cny-campaign": ["assets/images/lays-cny-campaign-cover.png", "assets/videos/lays-cny-campaign.mp4"],
+    "touareg-x-wu-jing": ["assets/images/touareg-x-wu-jing-cover.png", "assets/videos/touareg-x-wu-jing.mp4"],
   };
 
   for (const [slug, [poster, video]] of Object.entries(expectedMedia)) {
@@ -389,8 +397,8 @@ test("catalog preserves Excel project facts and supplied source URLs", () => {
   assert.equal(niki.title, "HUAWEI WATCH Fit 5 Niki");
   assert.equal(niki.featuredOrder, 10);
   assert.equal(niki.sourceUrl, "https://www.xinpianchang.com/a13700638?from=UserProfile");
-  assert.equal(niki.video, null);
-  assert.equal(niki.poster, "assets/images/project-placeholder.svg");
+  assert.equal(niki.video, "assets/videos/huawei-watch-fit-5-niki.mp4");
+  assert.equal(niki.poster, "assets/images/huawei-watch-fit-5-niki-cover.png");
 });
 
 test("featured home projects are exactly the ten catalog entries sorted by featuredOrder", () => {
