@@ -407,6 +407,24 @@ test("catalog preserves Excel project facts and supplied source URLs", () => {
   assert.equal(niki.poster, "assets/images/huawei-watch-fit-5-niki-cover.png");
 });
 
+test("Sprite, HUAWEI Home, and sumsung projects use the supplied local media", () => {
+  const projectRoot = path.resolve(__dirname, "..");
+  const expectedMedia = {
+    sprite: ["assets/images/sprite-cover.png", "assets/videos/sprite.mp4"],
+    "huawei-home": ["assets/images/huawei-home-cover.png", "assets/videos/huawei-home.mp4"],
+    "sumsung-x-hua-chenyu": ["assets/images/sumsung-x-hua-chenyu-cover.png", "assets/videos/sumsung-x-hua-chenyu.mp4"],
+  };
+
+  for (const [slug, [poster, video]] of Object.entries(expectedMedia)) {
+    const project = projects.find((item) => item.slug === slug);
+    assert.equal(project.poster, poster);
+    assert.equal(project.video, video);
+    assert.equal(fs.existsSync(path.join(projectRoot, poster)), true);
+    assert.equal(fs.existsSync(path.join(projectRoot, video)), true);
+    assert.ok(fs.statSync(path.join(projectRoot, video)).size < 100 * 1024 * 1024, `${slug} video must remain below GitHub's 100 MB limit`);
+  }
+});
+
 test("featured home projects are exactly the ten catalog entries sorted by featuredOrder", () => {
   const featured = selectFeaturedProjects([
     { ...validProject, slug: "third", featuredOrder: 3 },
