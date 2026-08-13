@@ -84,24 +84,26 @@ assert.doesNotMatch(home, /class="home-project-title"/);
 assert.doesNotMatch(css, /\.home-project-title/);
 
 assert.equal(
-  (home.match(/class="work-panel-caption"/g) || []).length,
-  catalog.filter((project) => project.featuredOrder !== null && project.poster === placeholderPath).length,
-  "Every placeholder home panel needs a visible project-specific caption.",
+  (home.match(/class="cover-title"/g) || []).length,
+  10,
+  "Every featured home panel needs a visible centered project title.",
 );
-assert.match(
-  cssRule('.work-panel[data-placeholder] .work-panel-caption'),
-  /position:\s*absolute;/,
-  "Placeholder captions must be visible in the base desktop/touch presentation.",
-);
+const coverTitleRule = cssRule(".cover-title");
+assert.match(coverTitleRule, /position:\s*absolute;/);
+assert.match(coverTitleRule, /place-items:\s*center;/);
+assert.match(coverTitleRule, /color:\s*var\(--white\);/);
+assert.doesNotMatch(coverTitleRule, /clip:\s*rect|width:\s*1px|height:\s*1px/);
 
 assert.equal(
   (projectsPage.match(/class="project-card reveal"[^>]*data-placeholder/g) || []).length,
   catalog.filter((project) => project.poster === placeholderPath).length,
   "Every placeholder Projects card must identify itself as a placeholder tile.",
 );
-const placeholderTitleRule = cssRule(".project-card[data-placeholder] .project-title");
-assert.match(placeholderTitleRule, /position:\s*absolute;/);
-assert.doesNotMatch(placeholderTitleRule, /clip:\s*rect|width:\s*1px|height:\s*1px/);
+assert.equal(
+  (projectsPage.match(/class="project-title cover-title"/g) || []).length,
+  catalog.length,
+  "Every Projects card needs the shared visible cover title.",
+);
 
 assert.doesNotMatch(home, /data-home-video/);
 assert.doesNotMatch(home, /home-hero-poster\.jpg/);

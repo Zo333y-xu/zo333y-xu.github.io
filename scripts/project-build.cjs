@@ -156,10 +156,9 @@ function renderHomeProject(project, options = {}) {
   const loading = options.lazy ? ' loading="lazy"' : "";
   const placeholder = isPlaceholderPoster(project.poster);
   const placeholderAttribute = placeholder ? " data-placeholder" : "";
-  const caption = placeholder ? `\n      <span class="work-panel-caption">${escapeHtml(project.title)}</span>` : "";
   return `    <a class="work-panel reveal" href="projects/${escapeHtml(project.slug)}/"${placeholderAttribute} aria-label="${escapeHtml(project.title)}">
       <img src="${escapeHtml(project.poster)}" alt="${escapeHtml(project.imageAlt)}"${loading}>
-${caption}
+      <span class="cover-title"><span>${escapeHtml(project.title)}</span></span>
     </a>`;
 }
 
@@ -208,7 +207,7 @@ function renderProjectCard(project, prefix = "") {
   const placeholderAttribute = isPlaceholderPoster(project.poster) ? " data-placeholder" : "";
   return `      <a class="project-card reveal" href="${href}"${placeholderAttribute} data-type="${escapeHtml(project.type)}" data-services="${escapeHtml(project.services.join("|"))}" data-search="${escapeHtml(project.search)}">
         <img src="${prefix}${escapeHtml(project.poster)}" alt="${escapeHtml(project.imageAlt)}" loading="lazy">
-        <span class="project-title"><span>${escapeHtml(project.title)}</span><small>${escapeHtml(project.titleZh)}</small></span>
+        <span class="project-title cover-title"><span>${escapeHtml(project.title)}</span><small>${escapeHtml(project.titleZh)}</small></span>
         <span class="project-hover">OPEN <span>watch<br>see case</span></span>
       </a>`;
 }

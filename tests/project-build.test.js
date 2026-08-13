@@ -249,6 +249,7 @@ test("project cards serialize every assigned service for independent directory U
   assert.match(html, /data-services="AIGC\|CG &amp; VFX"/);
   assert.doesNotMatch(html, /data-service="/);
   assert.doesNotMatch(html, /href="#"/);
+  assert.match(html, /<span class="project-title cover-title"><span>The Dawn<\/span>/);
 });
 
 test("automatic recommendations rank Type, shared Services, then catalog distance", () => {
@@ -277,7 +278,7 @@ test("placeholder project cards render a visible project-specific caption", () =
   });
 
   assert.match(html, /data-placeholder/);
-  assert.match(html, /class="project-title"/);
+  assert.match(html, /class="project-title cover-title"/);
   assert.match(html, />HUAWEI FreeBuds Pro 3</);
   assert.match(html, />领听原声 不同凡响</);
 });
@@ -407,6 +408,14 @@ test("catalog preserves Excel project facts and supplied source URLs", () => {
   assert.equal(niki.poster, "assets/images/huawei-watch-fit-5-niki-cover.png");
 });
 
+test("cover titles are centered white overlays that do not block interaction", () => {
+  const css = fs.readFileSync(path.join(__dirname, "..", "assets", "styles.css"), "utf8");
+  assert.match(css, /\.cover-title\s*\{[^}]*position:\s*absolute[^}]*inset:\s*0[^}]*place-items:\s*center[^}]*color:\s*var\(--white\)[^}]*white-space:\s*normal[^}]*overflow-wrap:\s*anywhere[^}]*pointer-events:\s*none/s);
+  assert.match(css, /\.cover-title > span\s*\{[^}]*display:\s*block[^}]*width:\s*100%[^}]*min-width:\s*0/s);
+  assert.match(css, /\.project-title small\s*\{[^}]*display:\s*none/s);
+  assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*\.cover-title\s*\{[^}]*font-size:\s*clamp\(18px,\s*5vw,\s*24px\)[^}]*padding:\s*16px/s);
+});
+
 test("projects with supplied local media use their published assets", () => {
   const projectRoot = path.resolve(__dirname, "..");
   const expectedMedia = {
@@ -471,7 +480,7 @@ test("home project panel uses direct detail links, project poster and image alt 
   assert.match(html, /alt="Floating earbuds in a silver case"/);
   assert.match(html, /loading="lazy"/);
   assert.match(html, /data-placeholder/);
-  assert.match(html, /class="work-panel-caption">HUAWEI FreeBuds Pro 3</);
+  assert.match(html, /<span class="cover-title"><span>HUAWEI FreeBuds Pro 3<\/span><\/span>/);
   assert.doesNotMatch(html, /href="projects\.html"/);
 });
 
