@@ -197,9 +197,9 @@ test("catalog search text includes every assigned canonical service", () => {
 test("supplied projects use their verified web media", () => {
   const expectedMedia = {
     showreel: ["assets/images/showreel-cover.png", "assets/videos/showreel.mp4"],
-    "huawei-freebuds-pro-3": ["assets/images/huawei-freebuds-pro-3-cover.png", "assets/videos/huawei-freebuds-pro-3.mp4"],
-    "huawei-nora-band-10": ["assets/images/huawei-nora-band-10-cover.png", "assets/videos/huawei-nora-band-10.mp4"],
-    "sanrio-brand-2025": ["assets/images/sanrio-brand-2025-cover.jpg", "assets/videos/sanrio-brand-2025.mp4"],
+    "huawei-freebuds-pro-3": ["assets/images/huawei-freebuds-pro-3-cover.jpg", "assets/videos/huawei-freebuds-pro-3.mp4"],
+    "huawei-nora-band-10": ["assets/images/huawei-nora-band-10-cover.jpg", "assets/videos/huawei-nora-band-10.mp4"],
+    "sanrio-brand-2025": ["assets/images/sanrio-brand-2025-cover.png", "assets/videos/sanrio-brand-2025.mp4"],
     "friso-x-volvo": ["assets/images/friso-x-volvo-cover.jpg", "assets/videos/friso-x-volvo.mp4"],
     cubee: ["assets/images/cubee-cover.jpg", "assets/videos/cubee.mp4"],
     "universal-studio": ["assets/images/universal-studio-cover.jpg", "assets/videos/universal-studio.mp4"],
@@ -387,6 +387,10 @@ test("detail-page stylesheet includes responsive player and recommendation rules
   assert.match(css, /\.project-player/);
   assert.match(css, /\.browse-more-grid/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.browse-more-grid/);
+  assert.match(css, /\.browse-more-card\s*\{[^}]*position:\s*relative[^}]*aspect-ratio:\s*16\s*\/\s*9[^}]*background:\s*transparent/s);
+  assert.match(css, /\.browse-more-card img\s*\{[^}]*position:\s*absolute[^}]*inset:\s*0[^}]*width:\s*100%[^}]*height:\s*100%[^}]*object-fit:\s*cover/s);
+  assert.match(css, /\.browse-more-card span\s*\{[^}]*position:\s*absolute[^}]*bottom:\s*0/s);
+  assert.doesNotMatch(css, /\.browse-more-card span\s*\{[^}]*display:\s*block[^}]*padding:\s*12px 0/s);
 });
 
 test("catalog preserves Excel project facts and supplied source URLs", () => {
