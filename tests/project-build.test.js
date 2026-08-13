@@ -407,12 +407,14 @@ test("catalog preserves Excel project facts and supplied source URLs", () => {
   assert.equal(niki.poster, "assets/images/huawei-watch-fit-5-niki-cover.png");
 });
 
-test("Sprite, HUAWEI Home, and sumsung projects use the supplied local media", () => {
+test("projects with supplied local media use their published assets", () => {
   const projectRoot = path.resolve(__dirname, "..");
   const expectedMedia = {
     sprite: ["assets/images/sprite-cover.png", "assets/videos/sprite.mp4"],
     "huawei-home": ["assets/images/huawei-home-cover.png", "assets/videos/huawei-home.mp4"],
     "sumsung-x-hua-chenyu": ["assets/images/sumsung-x-hua-chenyu-cover.png", "assets/videos/sumsung-x-hua-chenyu.mp4"],
+    "master-kong-ice-tea-x-tnt": ["assets/images/master-kong-ice-tea-x-tnt-cover.png", "assets/videos/master-kong-ice-tea-x-tnt.mp4"],
+    "huawei-watch-ultimate-design": ["assets/images/huawei-watch-ultimate-design-cover.png", "assets/videos/huawei-watch-ultimate-design.mp4"],
   };
 
   for (const [slug, [poster, video]] of Object.entries(expectedMedia)) {
