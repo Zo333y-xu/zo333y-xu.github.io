@@ -15,6 +15,9 @@ const expected = [
   ["sanrio-brand-2025", "sanrio-brand-2025-cover.png", "1EEF39813E4A638AA5BA2689B7CF593091B3F44F2ECDD5281DC6537E1D77F77C", 3840, 2160],
   ["oppo-r11", "oppo-r11-cover.png", "6606865A3CB575F55A7C606EFE5FF55CD8B3689ED444C90AA80E6194883EA5C4", 2448, 1038],
   ["audi-x-zheng-qinwen", "audi-x-zheng-qinwen-cover.png", "960D62FA7241CD0D7EBE24D4FC76D638CF1E4C9E243C8F084437EEA79334144B", 2457, 1199],
+  ["descente-x-daniel-wu", "descente-x-daniel-wu-cover.jpg", "F1F6C5CEF06D7BF686698FBC2E44FC620C9487E9DADC6E7AA53A840692439B49", 1435, 810],
+  ["friso-x-volvo", "friso-x-volvo-cover.png", "2A7AA819B2B48A0A205F4A536ED2E3021CDBC46B097DB54DED39B3262EFC6558", 1672, 941],
+  ["game-for-peace", "game-for-peace-cover.png", "9CC8315634955CE9D13EA9262666272A61BBFDA61EB237861427484760966861", 3840, 2160],
 ];
 
 function imageDimensions(buffer) {
@@ -49,5 +52,7 @@ test("obsolete cover formats are removed", () => {
     "huawei-nora-band-10-cover.png",
     "huawei-freebuds-pro-3-cover.png",
     "sanrio-brand-2025-cover.jpg",
+    "descente-x-daniel-wu-cover.png",
+    "friso-x-volvo-cover.jpg",
   ]) assert.equal(fs.existsSync(path.join(imageRoot, filename)), false, filename);
 });

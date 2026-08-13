@@ -200,7 +200,7 @@ test("supplied projects use their verified web media", () => {
     "huawei-freebuds-pro-3": ["assets/images/huawei-freebuds-pro-3-cover.jpg", "assets/videos/huawei-freebuds-pro-3.mp4"],
     "huawei-nora-band-10": ["assets/images/huawei-nora-band-10-cover.jpg", "assets/videos/huawei-nora-band-10.mp4"],
     "sanrio-brand-2025": ["assets/images/sanrio-brand-2025-cover.png", "assets/videos/sanrio-brand-2025.mp4"],
-    "friso-x-volvo": ["assets/images/friso-x-volvo-cover.jpg", "assets/videos/friso-x-volvo.mp4"],
+    "friso-x-volvo": ["assets/images/friso-x-volvo-cover.png", "assets/videos/friso-x-volvo.mp4"],
     cubee: ["assets/images/cubee-cover.jpg", "assets/videos/cubee.mp4"],
     "universal-studio": ["assets/images/universal-studio-cover.jpg", "assets/videos/universal-studio.mp4"],
     "huawei-watch-fit-5-niki": ["assets/images/huawei-watch-fit-5-niki-cover.png", "assets/videos/huawei-watch-fit-5-niki.mp4"],
@@ -417,8 +417,9 @@ test("projects with supplied local media use their published assets", () => {
     "huawei-watch-ultimate-design": ["assets/images/huawei-watch-ultimate-design-cover.png", "assets/videos/huawei-watch-ultimate-design.mp4"],
     "oppo-r11": ["assets/images/oppo-r11-cover.png", "assets/videos/oppo-r11.mp4"],
     "adidas-zne": ["assets/images/adidas-zne-cover.png", "assets/videos/adidas-zne.mp4"],
-    "descente-x-daniel-wu": ["assets/images/descente-x-daniel-wu-cover.png", "assets/videos/descente-x-daniel-wu.mp4"],
+    "descente-x-daniel-wu": ["assets/images/descente-x-daniel-wu-cover.jpg", "assets/videos/descente-x-daniel-wu.mp4"],
     "audi-x-zheng-qinwen": ["assets/images/audi-x-zheng-qinwen-cover.png", "assets/videos/audi-x-zheng-qinwen.mp4"],
+    "game-for-peace": ["assets/images/game-for-peace-cover.png", "assets/videos/game-for-peace.mp4"],
   };
 
   for (const [slug, [poster, video]] of Object.entries(expectedMedia)) {
