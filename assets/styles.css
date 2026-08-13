@@ -842,7 +842,7 @@ button { color: inherit; }
 .detail-header { height: 76px; }
 .project-intro { padding: clamp(72px, 9vw, 150px) 24px clamp(66px, 8vw, 128px); text-align: center; }
 .project-intro h1 { max-width: 1100px; margin: 0 auto; font-size: clamp(46px, 6vw, 104px); font-weight: 400; letter-spacing: -.06em; line-height: .95; }
-.project-player { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: var(--black); }
+.project-player { position: relative; width: min(calc(100% - 6vw), 1600px); margin: clamp(24px, 3vw, 48px) auto; aspect-ratio: 16 / 9; overflow: hidden; background: var(--black); }
 .project-player video { display: block; width: 100%; height: 100%; object-fit: cover; }
 .project-player--fallback > img { display: block; width: 100%; height: 100%; object-fit: cover; filter: brightness(.42); }
 .project-player-fallback-content { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 16px; padding: 24px; color: var(--white); text-align: center; }
@@ -870,7 +870,7 @@ button { color: inherit; }
 @media (max-width: 760px) {
   .detail-header { height: 58px; }
   .project-intro { padding: 64px 16px 58px; }
-  .project-player { aspect-ratio: 16 / 10; }
+  .project-player { width: calc(100% - 32px); margin: 16px auto; aspect-ratio: 16 / 10; }
   .project-player-fallback-content { gap: 12px; padding: 20px; }
   .project-play-button span { border-top-width: 12px; border-bottom-width: 12px; border-left-width: 18px; }
   .project-background { grid-template-columns: 1fr; gap: 14px; width: auto; margin: 0 20px; padding: 56px 0 100px; }
