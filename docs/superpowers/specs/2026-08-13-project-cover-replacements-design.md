@@ -17,6 +17,7 @@
 ## 数据与文件处理
 
 - 原始 JPG 保持 JPG，原始 PNG 保持 PNG，不进行二次编码或画质压缩。
+- 保留每张源文件的原始像素尺寸，不裁切、不缩放；Touareg 为 4680×2160，Universal 为 2276×1280，其余三张为 3840×2160。
 - 更新 `data/projects.cjs` 中 FreeBuds、NORA 和 Sanrio 的 poster 扩展名。
 - 替换 Touareg 和 Universal 的同名图片内容。
 - 删除不再引用的 `huawei-freebuds-pro-3-cover.png`、`huawei-nora-band-10-cover.png` 和 `sanrio-brand-2025-cover.jpg`。
