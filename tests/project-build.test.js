@@ -413,7 +413,7 @@ test("projects with supplied local media use their published assets", () => {
     sprite: ["assets/images/sprite-cover.png", "assets/videos/sprite.mp4"],
     "huawei-home": ["assets/images/huawei-home-cover.png", "assets/videos/huawei-home.mp4"],
     "sumsung-x-hua-chenyu": ["assets/images/sumsung-x-hua-chenyu-cover.png", "assets/videos/sumsung-x-hua-chenyu.mp4"],
-    "master-kong-ice-tea-x-tnt": ["assets/images/master-kong-ice-tea-x-tnt-cover.png", "assets/videos/master-kong-ice-tea-x-tnt.mp4"],
+    "master-kong-ice-tea-x-tnt": ["assets/images/master-kong-ice-tea-x-tnt-cover.jpg", "assets/videos/master-kong-ice-tea-x-tnt.mp4"],
     "huawei-watch-ultimate-design": ["assets/images/huawei-watch-ultimate-design-cover.png", "assets/videos/huawei-watch-ultimate-design.mp4"],
   };
 
