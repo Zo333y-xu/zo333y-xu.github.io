@@ -385,8 +385,10 @@ test("detail-page stylesheet includes responsive player and recommendation rules
   const css = fs.readFileSync(path.join(__dirname, "..", "assets", "styles.css"), "utf8");
   assert.match(css, /\.project-detail-page/);
   assert.match(css, /\.project-player/);
+  assert.match(css, /\.project-player\s*\{[^}]*width:\s*min\(calc\(100% - 6vw\), 1600px\)[^}]*margin:\s*clamp\(24px, 3vw, 48px\) auto/s);
   assert.match(css, /\.browse-more-grid/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.browse-more-grid/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.project-player\s*\{[^}]*width:\s*calc\(100% - 32px\)[^}]*margin:\s*16px auto[^}]*aspect-ratio:\s*16\s*\/\s*10/s);
   assert.match(css, /\.browse-more-card\s*\{[^}]*position:\s*relative[^}]*aspect-ratio:\s*16\s*\/\s*9[^}]*background:\s*transparent/s);
   assert.match(css, /\.browse-more-card img\s*\{[^}]*position:\s*absolute[^}]*inset:\s*0[^}]*width:\s*100%[^}]*height:\s*100%[^}]*object-fit:\s*cover/s);
   assert.match(css, /\.browse-more-card span\s*\{[^}]*position:\s*absolute[^}]*bottom:\s*0/s);
