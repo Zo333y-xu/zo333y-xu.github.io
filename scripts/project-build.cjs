@@ -272,7 +272,7 @@ ${cards}
 
 function renderFooter(prefix = "") {
   return `<footer class="site-footer" id="contact">
-    <div class="footer-cta"><span>Start from a single pixel.</span><a href="${prefix}contact.html">Get in touch!</a></div>
+    <div class="footer-cta"><span>Start from a single pixl.</span><a href="${prefix}contact.html">Get in touch!</a></div>
     <div class="footer-bottom">
       <p>White Pix is an international creative post-production<br>company with offices in Shanghai China.<br><a href="mailto:info@whitepixl.com">info@whitepixl.com</a></p>
       <div class="social-icons" aria-label="White Pix social profiles">

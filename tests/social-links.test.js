@@ -29,6 +29,7 @@ test("contact footer exposes three safe new-tab social links", () => {
 });
 
 test("contact Keep in touch text exposes three safe new-tab social links", () => {
+  assert.match(contact, /href="https:\/\/www\.whitepixl\.com">WWW\.WHITEPIXL\.COM<\/a>/);
   assert.match(contact, /href="wechat\.html"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*aria-label="White Pix on WeChat"[^>]*>WECHAT<\/a>/);
   assert.match(contact, /href="https:\/\/www\.xiaohongshu\.com\/user\/profile\/65364473000000000400a626[^\"]*"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*aria-label="White Pix on Xiaohongshu"[^>]*>RED<\/a>/);
   assert.match(contact, /href="https:\/\/www\.douyin\.com\/user\/MS4wLjABAAAAcszi43pbG_Ef4HTyMmNwJZc-UYjCK3RsE0J2__UGPseuyxfeyyUE4cEnCqvr2Adz\?from_tab_name=main"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*aria-label="White Pix on Douyin"[^>]*>DOUYIN<\/a>/);

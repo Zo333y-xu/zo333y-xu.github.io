@@ -13,6 +13,11 @@ const placeholderPath = "assets/images/project-placeholder.svg";
 const homeLogoPath = path.join(root, "assets", "images", "white-pix-logo-white.png");
 const lightPageLogoPath = path.join(root, "assets", "images", "white-pix-logo-dark.png");
 
+for (const page of [home, projectsPage]) {
+  assert.match(page, /Start from a single pixl\./);
+  assert.doesNotMatch(page, /Start from a single pixel\./);
+}
+
 function cssRule(selector) {
   const start = css.indexOf(selector);
   assert.notEqual(start, -1, `Missing CSS selector: ${selector}`);
