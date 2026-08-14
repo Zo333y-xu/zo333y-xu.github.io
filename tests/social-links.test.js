@@ -34,6 +34,11 @@ test("contact Keep in touch text exposes three safe new-tab social links", () =>
   assert.match(contact, /href="https:\/\/www\.douyin\.com\/user\/MS4wLjABAAAAcszi43pbG_Ef4HTyMmNwJZc-UYjCK3RsE0J2__UGPseuyxfeyyUE4cEnCqvr2Adz\?from_tab_name=main"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*aria-label="White Pix on Douyin"[^>]*>DOUYIN<\/a>/);
 });
 
+test("contact email row remains present with no published address", () => {
+  assert.match(contact, /<dt>E-mail<\/dt>\s*<dd><\/dd>/);
+  assert.doesNotMatch(contact, /whitepixl@vip\.com/i);
+});
+
 test("WeChat page presents the supplied QR image in a centered viewport", () => {
   const wechat = fs.readFileSync(path.join(root, "wechat.html"), "utf8");
   assert.match(wechat, /class="wechat-qr-page"/);
