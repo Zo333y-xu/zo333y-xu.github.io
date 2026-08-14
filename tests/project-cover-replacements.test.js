@@ -19,6 +19,8 @@ const expected = [
   ["friso-x-volvo", "friso-x-volvo-cover.png", "2A7AA819B2B48A0A205F4A536ED2E3021CDBC46B097DB54DED39B3262EFC6558", 1672, 941],
   ["game-for-peace", "game-for-peace-cover.png", "9CC8315634955CE9D13EA9262666272A61BBFDA61EB237861427484760966861", 3840, 2160],
   ["adidas-zne", "adidas-zne-cover-v2.jpg", "D0F79A1D15E52CE0B536732F26FDDE4A026E0F0F26EF85A5AC70BA79C1297D62", 1439, 801],
+  ["pepsi-summer-campaign", "pepsi-summer-campaign-cover-v2.jpg", "368B0DAEDDD46260446A6E86E1E0B7203B91B3335D051653CDC7935F47765F5C", 1293, 726],
+  ["sprite", "sprite-cover-v2.jpg", "1BD928A682ED1540226C91DAAFFF7FF5577A3D1104D02EB18D3521694801F69E", 1801, 1009],
 ];
 
 function imageDimensions(buffer) {
@@ -57,5 +59,7 @@ test("obsolete cover formats are removed", () => {
     "friso-x-volvo-cover.jpg",
     "adidas-zne-cover.png",
     "adidas-zne-cover.jpg",
+    "pepsi-summer-campaign-cover.png",
+    "sprite-cover.png",
   ]) assert.equal(fs.existsSync(path.join(imageRoot, filename)), false, filename);
 });

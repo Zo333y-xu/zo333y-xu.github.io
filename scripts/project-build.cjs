@@ -75,6 +75,7 @@ function validateProjects(projects) {
     slugs.add(project.slug);
 
     if (typeof project.client !== "string") throw new Error(`${project.slug}: invalid client`);
+    if (typeof project.published !== "boolean") throw new Error(`${project.slug}: invalid published state`);
     if (!Number.isInteger(project.year)) throw new Error(`${project.slug}: invalid year`);
     if (!isNormalizedPosterPath(project.poster)) throw new Error(`${project.slug}: invalid poster`);
     if (project.video !== null && !isNormalizedVideoPath(project.video)) {
@@ -109,7 +110,8 @@ function selectRecommendations(currentSlug, projects, limit = 3) {
   const current = projects.find((project) => project.slug === currentSlug);
   if (!current) throw new Error(`unknown project: ${currentSlug}`);
 
-  const bySlug = new Map(projects.map((project) => [project.slug, project]));
+  const publishedProjects = projects.filter((project) => project.published !== false);
+  const bySlug = new Map(publishedProjects.map((project) => [project.slug, project]));
   const currentIndex = projects.indexOf(current);
   const selected = [];
   const seen = new Set([currentSlug]);
@@ -121,7 +123,7 @@ function selectRecommendations(currentSlug, projects, limit = 3) {
     if (selected.length === limit) break;
   }
 
-  const ranked = projects
+  const ranked = publishedProjects
     .map((project, index) => ({
       project,
       index,
@@ -148,7 +150,7 @@ function selectRecommendations(currentSlug, projects, limit = 3) {
 
 function selectFeaturedProjects(projects) {
   return projects
-    .filter((project) => project.featuredOrder !== null)
+    .filter((project) => project.published !== false && project.featuredOrder !== null)
     .sort((first, second) => first.featuredOrder - second.featuredOrder);
 }
 
@@ -213,7 +215,10 @@ function renderProjectCard(project, prefix = "") {
 }
 
 function renderProjectsPage(projects) {
-  const cards = projects.map((project) => renderProjectCard(project)).join("\n");
+  const cards = projects
+    .filter((project) => project.published !== false && project.showInProjects !== false)
+    .map((project) => renderProjectCard(project))
+    .join("\n");
   return `<!doctype html>
 <html lang="en">
 <head>

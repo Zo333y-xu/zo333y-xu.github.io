@@ -8,6 +8,7 @@ const home = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const projectsPage = fs.readFileSync(path.join(root, "projects.html"), "utf8");
 const placeholderSvg = fs.readFileSync(path.join(root, "assets", "images", "project-placeholder.svg"), "utf8");
 const catalog = require("../data/projects.cjs");
+const projectsCatalog = catalog.filter((project) => project.published !== false && project.showInProjects !== false);
 const placeholderPath = "assets/images/project-placeholder.svg";
 const homeLogoPath = path.join(root, "assets", "images", "white-pix-logo-white.png");
 const lightPageLogoPath = path.join(root, "assets", "images", "white-pix-logo-dark.png");
@@ -74,7 +75,7 @@ assert.match(
 );
 
 const workPanels = [...home.matchAll(/<a class="work-panel reveal" href="([^"]+)"[^>]*>\s*<img src="([^"]+)" alt="([^"]+)"([^>]*)>/g)];
-assert.equal(workPanels.length, 10, "Home page must render ten featured project panels.");
+assert.equal(workPanels.length, 8, "Home page must render the eight published featured project panels.");
 for (const [, href] of workPanels) {
   assert.match(href, /^projects\/[a-z0-9]+(?:-[a-z0-9]+)*\/$/);
 }
@@ -85,7 +86,7 @@ assert.doesNotMatch(css, /\.home-project-title/);
 
 assert.equal(
   (home.match(/class="cover-title"/g) || []).length,
-  10,
+  8,
   "Every featured home panel needs a visible centered project title.",
 );
 const coverTitleRule = cssRule(".cover-title");
@@ -96,12 +97,12 @@ assert.doesNotMatch(coverTitleRule, /clip:\s*rect|width:\s*1px|height:\s*1px/);
 
 assert.equal(
   (projectsPage.match(/class="project-card reveal"[^>]*data-placeholder/g) || []).length,
-  catalog.filter((project) => project.poster === placeholderPath).length,
+  projectsCatalog.filter((project) => project.poster === placeholderPath).length,
   "Every placeholder Projects card must identify itself as a placeholder tile.",
 );
 assert.equal(
   (projectsPage.match(/class="project-title cover-title"/g) || []).length,
-  catalog.length,
+  projectsCatalog.length,
   "Every Projects card needs the shared visible cover title.",
 );
 

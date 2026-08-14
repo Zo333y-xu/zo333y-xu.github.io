@@ -35,6 +35,7 @@ const validProject = {
   services: ["Online"],
   search: "The Dawn carnival film",
   featuredOrder: null,
+  published: true,
   recommendedProjects: ["space-travel"],
 };
 
@@ -420,7 +421,7 @@ test("cover titles are centered white overlays that do not block interaction", (
 test("projects with supplied local media use their published assets", () => {
   const projectRoot = path.resolve(__dirname, "..");
   const expectedMedia = {
-    sprite: ["assets/images/sprite-cover.png", "assets/videos/sprite.mp4"],
+    sprite: ["assets/images/sprite-cover-v2.jpg", "assets/videos/sprite.mp4"],
     "huawei-home": ["assets/images/huawei-home-cover.jpg", "assets/videos/huawei-home.mp4"],
     "sumsung-x-hua-chenyu": ["assets/images/sumsung-x-hua-chenyu-cover.png", "assets/videos/sumsung-x-hua-chenyu.mp4"],
     "master-kong-ice-tea-x-tnt": ["assets/images/master-kong-ice-tea-x-tnt-cover.jpg", "assets/videos/master-kong-ice-tea-x-tnt.mp4"],
@@ -446,7 +447,7 @@ test("Lay’s and Pepsi use the supplied replacement covers", () => {
   const projectRoot = path.resolve(__dirname, "..");
   const expectedPosters = {
     "lays-cny-campaign": "assets/images/lays-cny-campaign-cover.jpg",
-    "pepsi-summer-campaign": "assets/images/pepsi-summer-campaign-cover.png",
+    "pepsi-summer-campaign": "assets/images/pepsi-summer-campaign-cover-v2.jpg",
   };
 
   for (const [slug, poster] of Object.entries(expectedPosters)) {
@@ -464,6 +465,20 @@ test("featured home projects are exactly the ten catalog entries sorted by featu
   ]);
 
   assert.deepEqual(featured.map((project) => project.slug), ["first", "second", "third"]);
+});
+
+test("unpublished projects stay out of public listings and recommendations", () => {
+  const visible = { ...validProject, slug: "visible", featuredOrder: 1 };
+  const hidden = { ...validProject, slug: "hidden", featuredOrder: 2, published: false };
+  const homeOnly = { ...validProject, slug: "home-only", featuredOrder: 3, showInProjects: false };
+  const neighbor = { ...validProject, slug: "neighbor", featuredOrder: null };
+  visible.recommendedProjects = ["hidden", "neighbor"];
+
+  assert.deepEqual(selectFeaturedProjects([visible, hidden, homeOnly, neighbor]).map((project) => project.slug), ["visible", "home-only"]);
+  const projectsHtml = renderProjectsPage([visible, hidden, homeOnly, neighbor]);
+  assert.doesNotMatch(projectsHtml, /projects\/hidden\//);
+  assert.doesNotMatch(projectsHtml, /projects\/home-only\//);
+  assert.deepEqual(selectRecommendations("visible", [visible, hidden, homeOnly, neighbor], 2).map((project) => project.slug), ["neighbor", "home-only"]);
 });
 
 test("home project panel uses direct detail links, project poster and image alt text", () => {
