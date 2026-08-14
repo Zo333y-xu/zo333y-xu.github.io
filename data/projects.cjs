@@ -37,7 +37,7 @@ function project({
 }
 
 module.exports = [
-  project({ slug: "showreel", title: "SHOWREEL", titleZh: "混剪", year: 2026, type: "3C & Tech", services: ["CG & VFX", "Online"], featuredOrder: 1, showInProjects: false, poster: "assets/images/showreel-cover.png", video: "assets/videos/showreel.mp4" }),
+  project({ slug: "showreel", title: "SHOWREEL", titleZh: "混剪", year: 2026, type: "3C & Tech", services: ["CG & VFX", "Online"], featuredOrder: 1, poster: "assets/images/showreel-cover.png", video: "assets/videos/showreel.mp4" }),
   project({ slug: "huawei-freebuds-pro-3", title: "HUAWEI FreeBuds Pro 3", titleZh: "领听原声 不同凡响", client: "HUAWEI", year: 2023, type: "3C & Tech", services: ["CG & VFX", "Online"], sourceUrl: "https://www.xinpianchang.com/a12725011?from=UserProfile", featuredOrder: 2, poster: "assets/images/huawei-freebuds-pro-3-cover.jpg", video: "assets/videos/huawei-freebuds-pro-3.mp4" }),
   project({ slug: "huawei-nora-band-10", title: "HUAWEI｜NORA BAND 10", titleZh: "NORA手环", client: "HUAWEI", year: 2025, type: "3C & Tech", services: ["CG & VFX", "Online"], sourceUrl: "https://www.xinpianchang.com/a13392086?from=UserProfile", featuredOrder: 3, poster: "assets/images/huawei-nora-band-10-cover.jpg", video: "assets/videos/huawei-nora-band-10.mp4" }),
   project({ slug: "sanrio-brand-2025", title: "Sanrio Brand 2025", titleZh: "三丽鸥2025宣传片", client: "Sanrio", year: 2025, type: "Beauty & Fashion", services: ["CG & VFX", "Online"], sourceUrl: "https://www.xinpianchang.com/a13510387?searchKw=sanrio&from=search_post", featuredOrder: 4, poster: "assets/images/sanrio-brand-2025-cover.png", video: "assets/videos/sanrio-brand-2025.mp4" }),

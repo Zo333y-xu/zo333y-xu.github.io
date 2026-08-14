@@ -403,6 +403,7 @@ test("catalog preserves Excel project facts and supplied source URLs", () => {
   assert.equal(showreel.titleZh, "混剪");
   assert.equal(showreel.title, "SHOWREEL");
   assert.equal(showreel.featuredOrder, 1);
+  assert.equal(showreel.showInProjects, true);
   assert.equal(niki.title, "HUAWEI WATCH Fit 5 Niki");
   assert.equal(niki.featuredOrder, 10);
   assert.equal(niki.sourceUrl, "https://www.xinpianchang.com/a13700638?from=UserProfile");
