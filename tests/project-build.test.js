@@ -426,7 +426,7 @@ test("projects with supplied local media use their published assets", () => {
     "master-kong-ice-tea-x-tnt": ["assets/images/master-kong-ice-tea-x-tnt-cover.jpg", "assets/videos/master-kong-ice-tea-x-tnt.mp4"],
     "huawei-watch-ultimate-design": ["assets/images/huawei-watch-ultimate-design-cover.png", "assets/videos/huawei-watch-ultimate-design.mp4"],
     "oppo-r11": ["assets/images/oppo-r11-cover.png", "assets/videos/oppo-r11.mp4"],
-    "adidas-zne": ["assets/images/adidas-zne-cover.jpg", "assets/videos/adidas-zne.mp4"],
+    "adidas-zne": ["assets/images/adidas-zne-cover-v2.jpg", "assets/videos/adidas-zne.mp4"],
     "descente-x-daniel-wu": ["assets/images/descente-x-daniel-wu-cover.jpg", "assets/videos/descente-x-daniel-wu.mp4"],
     "audi-x-zheng-qinwen": ["assets/images/audi-x-zheng-qinwen-cover.png", "assets/videos/audi-x-zheng-qinwen.mp4"],
     "game-for-peace": ["assets/images/game-for-peace-cover.png", "assets/videos/game-for-peace.mp4"],
